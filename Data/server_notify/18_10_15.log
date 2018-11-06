@@ -1,0 +1,7 @@
+【2018-10-15 22:59:55】
+订单号：20181015225927102551
+通知地址：http://www.100pay.cc/demo/server.php
+通知报文：memberid=10008&orderid=E20181015225922547791&transaction_id=20181015225927102551&amount=398.0000&datetime=20181015225955&returncode=00&sign=30C8AFC68688FA9DD33A915F09D010FA&attach=1234|456
+HTTP状态：
+返回：ok
+

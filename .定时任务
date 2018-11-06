@@ -1,0 +1,6 @@
+* * * * * sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
+* * * * * sleep 10; sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
+* * * * * sleep 20; sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
+* * * * * sleep 30; sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
+* * * * * sleep 40; sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
+* * * * * sleep 50; sh /home/www/ourspay.com.cn/pay/shell/posturl.sh
