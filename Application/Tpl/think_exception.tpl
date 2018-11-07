@@ -26,6 +26,7 @@ h1{ font-size: 32px; line-height: 48px; }
 </head>
 <body>
 <div class="error">
+<h1><?php echo strip_tags($e['message']);?></h1>
 <h1>出错了</h1>
 </div>
 </body>

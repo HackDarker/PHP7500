@@ -4,5 +4,6 @@ Runtime
 .project
 .idea
 Application/Runtime
+Application/Common/Conf/db.php
 .phpstorm.meta.php
 
