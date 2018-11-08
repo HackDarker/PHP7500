@@ -40,6 +40,7 @@ class IndexController extends PayController
             if (!is_file(APP_PATH . '/' . MODULE_NAME . '/Controller/' . $info['code'] . 'Controller.class.php')) {
                 $this->showmessage('支付通道不存在', ['pay_bankcode' => $this->channel['api']]);
             }
+            //var_dump($info['code'] . '/Pay');die;
             if (R($info['code'] . '/Pay', [$this->channel]) === false) {
                 $this->showmessage('服务器开小差了...');
             }
