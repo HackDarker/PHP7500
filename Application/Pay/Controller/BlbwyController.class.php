@@ -24,10 +24,20 @@ namespace Pay\Controller;
 
 class BlbwyController extends PayController
 {
+
+    const ISAPP_DEFAULT = 'web';
+
+    private static $isapp_types = ['app', 'web', 'H5'];
+
     private $gateway = 'https://ebank.nfoooo.com/payment/v1/order/';
-    private $queryUrl = 'https://ipay.chinasmartpay.cn/openapi/merchantPayment/orderQuery';
-    private $key = '742fa3ffd050fb441763bf8fb6c0594f';
     private $typename = 'Blbwy';
+    
+
+    public function __construct()
+    {
+        parent::__construct();   
+    }
+
     /**
      *  发起支付
      */
@@ -55,14 +65,25 @@ class BlbwyController extends PayController
         $params['notifyUrl'] = $notifyurl;          //商户支付成功后，该地址将收到支付成功的异步通知信息，该地址收到的异步通知作为发货依据，必填
         $params['charset'] = "utf-8";                           //参数编码字符集，必填
         $params['body'] = (string)$body;                               //商品的具体描述，选填
-        //$params['isApp'] = $_POST["isApp"];                     //接入方式
+
+        $params['isApp'] = self::getAppType();                     //接入方式
+ 
         $baseUri = $this->gateway.$params['merchantId'].'-'.$params['orderNo'];
-        $params['sign'] = self::sign($params,$apiKey);
+        $params['sign'] = self::sign($params,$apikey);
         $params['signType'] = "SHA";//signType不参与加密，所以要放在最后
         //此处提供hmtl和模拟post两种方式，网银和H5需要html方式提交,采用扫码获取链接时可以用模拟Post连接获取交易地址。
         //curl_Post   and   HtmlPost
-        $HtmlStr = utils::postHtml($baseUri, $params);
+        $HtmlStr = self::postHtml($baseUri, $params);
         echo $HtmlStr; 
+    }
+
+    private static function getAppType()
+    {
+        $type = $_REQUEST['isApp'];
+        if (empty($type) || !in_array($type, self::isapp_types))
+            return self::ISAPP_DEFAULT;
+
+        return $type;
     }
 
 
@@ -106,36 +127,8 @@ class BlbwyController extends PayController
         }
     }
 
-    /**
-     *  服务器通知
-     */
+
     public function notifyurl()
-    {
-
-        $post = $_POST;
-        file_put_contents('./Data/notify2.txt', "【" . date('Y-m-d H:i:s') . "】\r\n" . json_encode($_POST) . "\r\n\r\n", FILE_APPEND);
-        if(!$post["orderNo"]){ die; }
-        //因为验签总是不对所以这里调用主动查询接口
-        $orderInfo = M("Order")->where("out_trade_id = '" . $post["orderNo"] . "'")->find();
-        if(isset($post['mchtOrderId']) && $post['merchantId'] === $orderInfo['memberid'] && $post['payResult'] == '1'){
-            
-            if (1) {
-                //签名验证成功
-                $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
-                echo "success";die;
-                exit;
-            } else {
-                //签名验证失败
-                exit;
-            }
-
-        }
-        die;
-
-    }
-
-
-    public function notify()
     {
         $content = file_get_contents("php://input");
         //参数进行转换
@@ -154,6 +147,7 @@ class BlbwyController extends PayController
         //进行签名匹配 匹配返回 success 即可  其他失败处理  根据商户系统进行设置
         $sign = $_POST['sign'];
         if ($sign == $str){
+            $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
             echo "success";
             exit;
         }
