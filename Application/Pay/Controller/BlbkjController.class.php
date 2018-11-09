@@ -27,7 +27,7 @@ class BlbkjController extends PayController
     private $gateway = 'https://ebank.nfoooo.com/payment/v1/order/';
     private $queryUrl = 'https://ipay.chinasmartpay.cn/openapi/merchantPayment/orderQuery';
     private $key = '742fa3ffd050fb441763bf8fb6c0594f';
-    private $typename = 'Kltkj';
+    private $typename = 'Blbkj';
     /**
      *  发起支付
      */
@@ -36,7 +36,7 @@ class BlbkjController extends PayController
         $orderid = I("request.pay_orderid");
         $body    = I('request.pay_productname');
         $money = intval(I('request.pay_amount'));
-        $data    = $this->getParameter('百乐宝网银支付', $array, __CLASS__, 1);
+        $data    = $this->getParameter('百乐宝快捷支付', $array, __CLASS__, 1);
         $notifyurl = $this->_site . 'Pay_Blbkj_notifyurl.html';
         $callbackurl = $this->_site . 'Pay_Blbkj_callbackurl.html';
         
