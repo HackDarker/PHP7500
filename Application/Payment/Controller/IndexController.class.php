@@ -68,11 +68,12 @@ class IndexController extends PaymentController{
                         if ($opt == 'Exec') {
                             //加锁防止重复提交
                             $res = M('Wttklist')->where(['id' => $v['id'], 'df_lock' => 0])->setField('df_lock', 1);
-                            if (!$res) {
-                                Log::record("ID：".$v['id']."加锁失败", Log::INFO);
-                                continue;
-                            }
+                            // if (!$res) {
+                            //     Log::record("ID：".$v['id']."加锁失败", Log::INFO);
+                            //     continue;
+                            // }
                         }
+
                         $v['money'] = round($v['money'], 2);
                         $result = R('Payment/' . $code . '/Payment' . $opt, [$v, $pfa_list]);
                         if ($result == FALSE) {

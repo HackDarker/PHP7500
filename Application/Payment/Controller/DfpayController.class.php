@@ -163,6 +163,7 @@ class DfpayController extends Controller
         $extends = I("post.extends", '');
         //当前可用代付渠道
         $channel_ids = M('pay_for_another')->where(['status' => 1])->getField('id', true);
+
         if($channel_ids) {
             //获取渠道扩展字段
             $fields = M('pay_channel_extend_fields')->where(['channel_id'=>['in',$channel_ids]])->select();
