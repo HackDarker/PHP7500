@@ -36,7 +36,7 @@ class BlbkjController extends PayController
         $orderid = I("request.pay_orderid");
         $body    = I('request.pay_productname');
         $money = intval(I('request.pay_amount'));
-        $data    = $this->getParameter('百乐宝快捷支付', $array, __CLASS__, 100);
+        $data    = $this->getParameter('百乐宝网银支付', $array, __CLASS__, 1);
         $notifyurl = $this->_site . 'Pay_Blbkj_notifyurl.html';
         $callbackurl = $this->_site . 'Pay_Blbkj_callbackurl.html';
         
@@ -44,9 +44,10 @@ class BlbkjController extends PayController
         
         $params['orderNo'] = $orderid;                          //商户订单号，务必确保在系统中唯一，必填
         $params['totalFee'] = $money;               //订单金额，单位为RMB元，必填
-        $params['defaultbank'] = "QUICKPAY";         //网银代码，当支付方式为bankPay时，该值为空；支付方式为directPay时该值必传
+        //$params['defaultbank'] = "QUICKPAY";         //网银代码，当支付方式为bankPay时，该值为空；支付方式为directPay时该值必传
         $params['title'] = (string)$body;                              //商品的名称，请勿包含字符，选填
-        $params['paymethod'] = 'directPay';             //支付方式，directPay：直连模式；bankPay：收银台模式，必填
+        //$params['paymethod'] = 'directPay';             //支付方式，directPay：直连模式；bankPay：收银台模式，必填
+        $params['paymethod'] = 'bankPay';             //支付方式，directPay：直连模式；bankPay：收银台模式，必填
         $params['service'] = "online_pay";                      //固定值online_pay，表示网上支付，必填
         $params['paymentType'] = "1";                           //支付类型，固定值为1，必填
         $params['merchantId'] = $data['mch_id'];                    //支付平台分配的商户ID，必填
