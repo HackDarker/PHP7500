@@ -5,6 +5,7 @@ class BlbdfController extends PaymentController
 {
 
     private static $siteurl = "https://client.nfoooo.com/agentPay/v1/batch/";
+    private static $queryurl = "https://client.nfoooo.com/agentPay/v1/batch/";
 
     public function __construct()
     {
@@ -48,7 +49,7 @@ class BlbdfController extends PaymentController
             $batchNo,                                   //商户订单号
             "OK"                                        //备注
         ];
-        
+
         $apikey = $config['signkey'];
 
         $string = "1";
@@ -64,13 +65,13 @@ class BlbdfController extends PaymentController
         //发起请求
         $params['signType'] = "SHA";
         $result = self::curl_post($baseUri,$params);
-        // echo "return";
-        // print_r($result);exit;
+        echo "return";
+        print_r($result);exit;
 
 		file_put_contents('./Data/ANSDf.txt', "【".date('Y-m-d H:i:s')."】\r\n".$result."\r\n\r\n",FILE_APPEND);
-        
+
         if ($result) {
-            
+
             $result = json_decode($result, true);
             $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMessage']));
 
@@ -107,43 +108,114 @@ class BlbdfController extends PaymentController
         return $response;
     }
 
+
+    /**
+     * curl_get
+     * @param $url
+     * @param array $data
+     * @param int $timeout
+     * @return bool|mixed
+     */
+    private static function curl_get($url, $data = array(), $timeout = 10) {
+        if($url == "" || $timeout <= 0){
+            return false;
+        }
+        if($data != array()) {
+            $url = $url . '?' . http_build_query($data);
+        }
+        $con = curl_init((string)$url);
+        curl_setopt($con, CURLOPT_HEADER, false);
+        curl_setopt($con, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($con, CURLOPT_TIMEOUT, (int)$timeout);
+        curl_setopt($con, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($con, CURLOPT_SSL_VERIFYHOST, false);
+        return curl_exec($con);
+    }
+
+
     public function PaymentQuery($data, $config)
     {
-        $arraystr = [
-            'version'    => '1.0.0',
-            'txnType'    => '00',
-            'txnSubType' => '01',
-            'merId'      => $config['mch_id'],
-            'merOrderId' => $data['orderid'],
+        $apiKey = $config['signkey'];
+        $date = date("Ymd", strtotime($data['sqdatetime']));
+
+        $params = [
+            "merchantId" => $config['mch_id'],        //商户号
+            "batchVersion" => "00",             //版本号
+            "charset" => "utf8"                 //字符编码
         ];
-        $arraystr['signature']  = base64_encode($this->md5Sign($arraystr, $config['signkey']));
-        $arraystr['signMethod'] = 'MD5';
-        $result                 = curlPost($config['query_gateway'], http_build_query($arraystr));
+        //参数进行封装
+        $params['batchDate'] =$date;
+        $params['batchNo'] = $data['orderid'];
+        $baseUri = self::$queryurl . $params['merchantId'] . '-' . $params['batchNo'];
+        //进行验签,此处是SHA加密，可选MD5根据商户后台秘钥决定
+        $params['sign'] = self::sign($params,$apiKey);
+        $params['signType'] = "SHA";
+        $result = self::curl_get($baseUri, $params);
+
+
+        $return = [];
+
         if ($result) {
-            parse_str($result, $result);
-            $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMsg']));
-            switch ($result['respCode']) {
+            $result = json_decode($result, true);
+            $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMessage']));
 
-                case '1001':
-                    $return = ['status' => 2, 'msg' => $result['respMsg']];
-                    break;
-                case '1002':
-                    $return = ['status' => 3, 'msg' => $result['respMsg']];
-                    break;
-                case '1111':
-                    $return = ['status' => 1, 'msg' => $result['respMsg']];
-                    break;
-                default:
-                    $return = ['status' => 3, 'msg' => $result['respMsg']];
-                    break;
+            $batchContent = $result['batchContent'];
+            $contents = explode(",", $batchContent);
+            //print_r($contents);
+            $status = $contents[count($contents) - 2];
+            //var_dump($status);exit;
+
+            if ($result['respCode'] != "S0001") {
+                $return = ['status' => 3, 'msg' => $result['respMsg']];
+            } else if ($status == '成功') {
+                $return = ['status' => 2, 'msg' => $result['respMsg']];
+            } else if (strtoupper($status) == 'NULL') {
+                $return = ['status' => 1, 'msg' => $result['respMsg']];
             }
-
         } else {
             $return = ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
         }
 
         return $return;
     }
+
+    //public function PaymentQuery($data, $config)
+    //{
+    //    $arraystr = [
+    //        'version'    => '1.0.0',
+    //        'txnType'    => '00',
+    //        'txnSubType' => '01',
+    //        'merId'      => $config['mch_id'],
+    //        'merOrderId' => $data['orderid'],
+    //    ];
+    //    $arraystr['signature']  = base64_encode($this->md5Sign($arraystr, $config['signkey']));
+    //    $arraystr['signMethod'] = 'MD5';
+    //    $result                 = curlPost($config['query_gateway'], http_build_query($arraystr));
+    //    if ($result) {
+    //        parse_str($result, $result);
+    //        $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMsg']));
+    //        switch ($result['respCode']) {
+
+    //            case '1001':
+    //                $return = ['status' => 2, 'msg' => $result['respMsg']];
+    //                break;
+    //            case '1002':
+    //                $return = ['status' => 3, 'msg' => $result['respMsg']];
+    //                break;
+    //            case '1111':
+    //                $return = ['status' => 1, 'msg' => $result['respMsg']];
+    //                break;
+    //            default:
+    //                $return = ['status' => 3, 'msg' => $result['respMsg']];
+    //                break;
+    //        }
+
+    //    } else {
+    //        $return = ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
+    //    }
+
+    //    return $return;
+    //}
 
     public static function sign($params, $apiKey)
     {
