@@ -65,8 +65,8 @@ class BlbdfController extends PaymentController
         //发起请求
         $params['signType'] = "SHA";
         $result = self::curl_post($baseUri,$params);
-        echo "return";
-        print_r($result);exit;
+        //echo "return";
+        //print_r($result);exit;
 
 		file_put_contents('./Data/ANSDf.txt', "【".date('Y-m-d H:i:s')."】\r\n".$result."\r\n\r\n",FILE_APPEND);
 

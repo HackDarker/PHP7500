@@ -31,11 +31,11 @@ class BlbwyController extends PayController
 
     private $gateway = 'https://ebank.nfoooo.com/payment/v1/order/';
     private $typename = 'Blbwy';
-    
+
 
     public function __construct()
     {
-        parent::__construct();   
+        parent::__construct();
     }
 
     /**
@@ -49,9 +49,9 @@ class BlbwyController extends PayController
         $data    = $this->getParameter('百乐宝网银支付', $array, __CLASS__, 1);
         $notifyurl = $this->_site . 'Pay_Blbwy_notifyurl.html';
         $callbackurl = $this->_site . 'Pay_Blbwy_callbackurl.html';
-        
+
         $apikey = $data['signkey'];
-        
+
         $params['orderNo'] = $orderid;                          //商户订单号，务必确保在系统中唯一，必填
         $params['totalFee'] = $money;               //订单金额，单位为RMB元，必填
         //$params['defaultbank'] = "QUICKPAY";         //网银代码，当支付方式为bankPay时，该值为空；支付方式为directPay时该值必传
@@ -67,14 +67,20 @@ class BlbwyController extends PayController
         $params['body'] = (string)$body;                               //商品的具体描述，选填
 
         $params['isApp'] = self::getAppType();                     //接入方式
- 
+
+        //if ($_SERVER['REMOTE_ADDR'] == '219.140.116.41') {
+        //    echo "<pre>";
+        //    print_r($params);
+        //    exit;
+        //}
+
         $baseUri = $this->gateway.$params['merchantId'].'-'.$params['orderNo'];
         $params['sign'] = self::sign($params,$apikey);
         $params['signType'] = "SHA";//signType不参与加密，所以要放在最后
         //此处提供hmtl和模拟post两种方式，网银和H5需要html方式提交,采用扫码获取链接时可以用模拟Post连接获取交易地址。
         //curl_Post   and   HtmlPost
         $HtmlStr = self::postHtml($baseUri, $params);
-        echo $HtmlStr; 
+        echo $HtmlStr;
     }
 
     private static function getAppType()
@@ -127,10 +133,30 @@ class BlbwyController extends PayController
         }
     }
 
+    private static function debug()
+    {
+        var_dump(F("blb_notify_test"));exit;
+        $content = file_get_contents("php://input");
+        $info = [];
+        if (F("blb_notify_test"))
+        {
+            $info = F("blb_notify_test");
+        }
+
+        //var_dump($info);
+
+        $info[] = $content;
+
+        F("blb_notify_test", $info);
+
+    }
 
     public function notifyurl()
     {
+        //self::debug();
+
         $content = file_get_contents("php://input");
+
         //参数进行转换
         parse_str($content,$data);
         //参数转换成K->V
@@ -139,17 +165,21 @@ class BlbwyController extends PayController
         }
         unset($params['sign']);
         unset($params['signType']);
-        
-        $orderInfo = M("Order")->where(['out_trade_id'=>$_POST["orderNo"]])->field("key")->find();
+
+        $orderInfo = M("Order")->where(['out_trade_id'=>$_POST["order_no"]])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
         $str = self::sign($params,$apikey);
-        
-        //进行签名匹配 匹配返回 success 即可  其他失败处理  根据商户系统进行设置
+
         $sign = $_POST['sign'];
         if ($sign == $str){
             $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
+            ob_clean();
             echo "success";
             exit;
+        } else {
+            ob_clean();
+            \Think\Log::write($this->typename." notify callback failed. info:".$content,'ALERT');
+            echo "error";
         }
     }
 
