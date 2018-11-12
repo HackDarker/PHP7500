@@ -15,6 +15,7 @@ class PayForAnotherModel extends BaseModel
 
     protected $_auto = [
         ['updatetime', 'time', 3, 'function',],
+        ['cost_rate', "floatval",3, 'function'],
     ];
 
     public function editAllDefault($id){
