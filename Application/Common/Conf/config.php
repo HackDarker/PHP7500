@@ -5,7 +5,7 @@ return array(
     'COOKIE_EXPIRE' => 3600,
     'COOKIE_SECURE' => false,
     'COOKIE_HTTPONLY' => true,
-    'LOAD_EXT_CONFIG' => 'website,db,tags,route,disable,version,paytype,merchants,planning,additional,deploy',
+    'LOAD_EXT_CONFIG' => 'website,db,tags,route,disable,version,paytype,merchants,planning,additional,deploy,payconf',
     'DEFAULT_MODULE' => 'Home',
     /* 全局过滤配置 */
     'DEFAULT_FILTER' =>  'strip_tags,htmlspecialchars',

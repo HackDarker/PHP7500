@@ -7,3 +7,6 @@ Application/Runtime
 Application/Common/Conf/db.php
 .phpstorm.meta.php
 
+# 代付动态配制
+Application/Common/Conf/payconf.php
+
