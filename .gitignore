@@ -7,6 +7,7 @@ Application/Runtime
 Application/Common/Conf/db.php
 .phpstorm.meta.php
 
-# 代付动态配制
+# 服务器独有配制文件
 Application/Common/Conf/payconf.php
+Application/Common/Conf/deploy.php
 
