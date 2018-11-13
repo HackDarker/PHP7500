@@ -272,7 +272,7 @@ class KltdfController extends PaymentController
     public function notifyurl()
     {
         self::debug("Kltdf");
-
+        
         $resData = $_POST;
         $orderno = $resData['merchantOrderId'];
         $sign = $resData['sign'];
@@ -280,20 +280,20 @@ class KltdfController extends PaymentController
         $orderInfo = M("wttklist")->alias('a')
             ->join("pay_pay_for_another as b on a.df_id = b.id")
             ->where(['a.orderid'=>$orderno])
-            ->field("b.signkey as key,b.code,a.id,b.df_id,b.title")
+            ->field("b.signkey `key`,b.code,a.id,b.title")
             ->find();
 
         ob_clean();
 
         if (empty($orderInfo)) {
-            $this->log($orderInfo['code']. " notify callback failed. not find [pay_for_another] info, return data:".http_build_query($resData));
+            $this->log($orderInfo['code']. " notify callback failed. not find [pay_for_another] info, return data:".http_build_query($_POST));
             echo "success";
             exit;
         }
 
         $mysign = strtoupper(md5(self::arrayToString($resData). '&key='.$orderInfo['key']));
         if ($sign != $mysign) {
-            $this->log($orderInfo['code']." notify callback failed[sign error]. info:".$content);
+            $this->log($orderInfo['code']." notify callback failed[sign error]. info:".http_build_query($_POST));
             echo "success";
             exit;
         }
@@ -314,7 +314,7 @@ class KltdfController extends PaymentController
 
             default:
                 $status = 3;
-                $msg = "代付失败".;
+                $msg = "代付失败".$resData['errorMsg'];
                 break;
         }
 
@@ -323,7 +323,7 @@ class KltdfController extends PaymentController
         $result = $this->handle($orderInfo['id'], $status, $other);
 
         if (empty($result)) {
-            $this->log($orderInfo['code']." notify callback failed[db save error]. info:".$content);
+            $this->log($orderInfo['code']." notify callback failed[db save error]. info:".http_build_query($_POST));
             echo "success";
             exit;   
         }
