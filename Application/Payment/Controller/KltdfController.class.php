@@ -271,8 +271,8 @@ class KltdfController extends PaymentController
      */
     public function notifyurl()
     {
-        self::debug("Kltdf");
-        
+        //self::debug("Kltdf");
+
         $resData = $_POST;
         $orderno = $resData['merchantOrderId'];
         $sign = $resData['sign'];
