@@ -10,7 +10,7 @@ class KltdfController extends PaymentController
     const ACC_BUS = 2;      //企业帐户类型
     const ACC_PER = 1;      //个人帐户类型
 
-    const PURPOSE_DEF = "pay for another";
+    const PURPOSE_DEF = "pay for another"; 
 
     private static $siteurl = "";
     private static $queryurl = "";
@@ -28,8 +28,9 @@ class KltdfController extends PaymentController
 
         self::$queryurl = $conf['singleQueryUrl'];
 
-        self::$notifyUrl = $this->_site . "/Payment_Test_index";
+        self::$notifyUrl = $this->_site . "/Payment_Kltdf_notifyurl";
     }
+
 
     /**
      * 代付接口
@@ -261,8 +262,73 @@ class KltdfController extends PaymentController
         //"{"responseCode":"000000","responseMsg":"短信发送成功！","requestId":"0d6f13ffcf95418fb08b47f8549d9a1d","mchtId":"903110153110001","signMsg":"01304476E4E3EB0BB68259A924445ADE","signType":"1","orderNo":"wx201808161629"}"
     }
 
+
+
+    /**
+     * klt异步通知特殊
+     *  # 如果本地业务处理失败，则必须返回success,表未本次通知成功，会有后续通知。
+     *  # 如果本地业务处理成功，则返回finish(或除success的任意字符串)。
+     */
     public function notifyurl()
     {
+        self::debug("Kltdf");
+
+        $resData = $_POST;
+        $orderno = $resData['merchantOrderId'];
+        $sign = $resData['sign'];
+
+        $orderInfo = M("wttklist")->alias('a')
+            ->join("pay_pay_for_another as b on a.df_id = b.id")
+            ->where(['a.orderid'=>$orderno])
+            ->field("b.signkey as key,b.code,a.id,b.df_id,b.title")
+            ->find();
+
+        ob_clean();
+
+        if (empty($orderInfo)) {
+            $this->log($orderInfo['code']. " notify callback failed. not find [pay_for_another] info, return data:".http_build_query($resData));
+            echo "success";
+            exit;
+        }
+
+        $mysign = strtoupper(md5(self::arrayToString($resData). '&key='.$orderInfo['key']));
+        if ($sign != $mysign) {
+            $this->log($orderInfo['code']." notify callback failed[sign error]. info:".$content);
+            echo "success";
+            exit;
+        }
+
+        $status ;
+        $msg = '';
+
+        switch ((int)$resData['orderStatus']) {
+            case 0:
+                $status = 1;
+                $msg = "申请成功";
+                break;
+
+            case 1:
+                $status = 2;
+                $msg = "已完成";
+                break;
+
+            default:
+                $status = 3;
+                $msg = "代付失败".;
+                break;
+        }
+
+        $other = ['code' => $orderInfo['code'], 'df_name' => $orderInfo['title'], 'msg'=>$msg];
+
+        $result = $this->handle($orderInfo['id'], $status, $other);
+
+        if (empty($result)) {
+            $this->log($orderInfo['code']." notify callback failed[db save error]. info:".$content);
+            echo "success";
+            exit;   
+        }
+
+        exit("finish");
 
     }
 

@@ -82,4 +82,38 @@ class PaymentController extends Controller
    
 	}
 
+
+	/**
+	 * 主要来记录异步回调的支付结束信息
+	 * @param string $msg 日志内容
+	 * @param string $level 日志级别 默认'ALERT'
+	 */
+	protected function log($msg, $level = 'ALERT')
+	{
+		\Think\Log::record($msg,$level);
+	}
+
+	/**
+     * 方便调试异步通知
+     * @param string $ident 支付类型标识字符串
+     */
+    protected static function debug($ident = '')
+    {
+        $cachename = $ident.'_notify_test';
+        
+        $content = file_get_contents("php://input");
+        $info = [];
+        if (F($cachename))
+        {
+            $info = F($cachename);
+        }
+
+        //var_dump($info);
+
+        $info[] = $content;
+
+        F($cachename, $info);
+
+    }
+
 }
