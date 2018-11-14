@@ -56,8 +56,7 @@
                             <div class="layui-input-inline">
                                 <select name="status">
                                     <option value="">全部状态</option>
-                                    <option <if condition="$status neq '' && $status eq 0">selected
-                                </if> value="0">未处理</option>
+                                    <option <if condition="$status neq '' && $status eq 0">selected</if> value="0">未处理</option>
                                     <option <if condition="$status eq 1">selected</if> value="1">处理中</option>
                                     <option <if condition="$status eq 2">selected</if> value="2">已打款</option>
                                     <option <if condition="$status eq 3">selected</if> value="3">已驳回</option>
@@ -67,10 +66,7 @@
                             <div class="layui-input-inline">
                                 <select name="T">
                                     <option value="">全部类型</option>
-                                    <option <if
-                                        condition="$T neq '' && $T neq '' && $T eq 0">selected</if>
-                                    value="0">T +
-                                    0</option>
+                                    <option <if condition="$T neq '' && $T eq 0">selected</if>value="0">T +0</option>
                                     <option <if condition="$T eq 1">selected</if> value="1">T + 1</option>
                                     <option <if condition="$T eq 7">selected</if> value="7">T + 7</option>
                                     <option <if condition="$T eq 30">selected</if> value="30">T + 30</option>
@@ -155,7 +151,7 @@
                             <td><{$vo.memo}></td>
                             <td >
                                 <if condition="$vo['status'] eq 0">
-                                    <select lay-ignore=''  style="height: 30px;">
+                                    <select lay-ignore=''  style="height: 100%;">
                                         <option>请选择</option>
                                         <foreach name="pfa_lists" item="v">
                                             <option value="<{$v.id}>" <if condition="$v[is_default] eq 1">selected</if> ><{$v.title}></option>

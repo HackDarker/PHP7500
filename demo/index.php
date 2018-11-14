@@ -92,6 +92,11 @@ $pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
                                     <label for="bd5"><img src="weixin.png" alt="快捷支付"><span>百利宝网银</span></label>
                                 </li>
 
+                                <li>
+                                    <input value="917" name="channel" id="bd6" type="radio">
+                                    <label for="bd6"><img src="weixin.png" alt="瀚银网银"><span>瀚银网银</span></label>
+                                </li>
+
 
                             </ul>
                             <div class="btns"> <button type="submit" class="pcdemo-btn sbpay-btn" >立即支付</button></div>
