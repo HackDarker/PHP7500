@@ -7,6 +7,9 @@ Application/Runtime
 Application/Common/Conf/db.php
 .phpstorm.meta.php
 
+# 支付、自动任务数据文件
+Data/*
+
 # 服务器独有配制文件
 Application/Common/Conf/payconf.php
 Application/Common/Conf/deploy.php
