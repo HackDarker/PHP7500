@@ -464,7 +464,9 @@ class PayController extends Controller
                         'pay_orderid' => $order_info["pay_orderid"],
                     ];
                     $order_result = $m_Order->where($order_where)->setField("pay_status", 2);
+                    return false === $order_result; //可能上次更新成功了，所以用恒等
                 } else {
+                    return false;
                     // $this->jiankong($order_info['pay_orderid']);
                 }
                 break;

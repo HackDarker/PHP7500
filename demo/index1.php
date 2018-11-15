@@ -35,6 +35,8 @@ $sign = strtoupper(md5($md5str . "key=" . $Md5key));
 $native["pay_md5sign"] = $sign;
 $native['pay_attach'] = "1234|456";
 $native['pay_productname'] ='VIP基础服务';
+
+$native = array_merge($_POST, $native);
 ?>
 
 <!DOCTYPE html>

@@ -101,11 +101,11 @@ class KltdfController extends PaymentController
         $str2 = self::arrayToString($resultData);
         $sign = strtoupper(md5($str2.'&key='.$key));
 
-        if($sign != $signMsg)
-            return ['status' => 3, 'msg' => '验签失败！'];
-
         if ($resultData['responseCode'] != self::NOTIFY_CODE_SUC)
             return ['status' => 3, 'msg' => $resultData['responseMsg'] ?: '代付创建失败'];
+
+        if($sign != $signMsg)
+            return ['status' => 3, 'msg' => '验签失败！'];
         
         if ($resultData['orderState'] == "FAIL")
             return ["status" => 3, 'msg' => $resultData['responseMsg']?: '代付失败'];

@@ -1,5 +1,7 @@
 <?php
-$pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
+//$pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
+
+$pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
 
 ?>
 <!DOCTYPE html>
@@ -8,6 +10,7 @@ $pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
     <meta charset=UTF-8>
     <title>聚合收银台</title>
     <link href="cashier.css" rel="stylesheet">
+
 </head>
 <body>
 <div class="tastesdk-box">
@@ -29,7 +32,7 @@ $pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
         <div class="typedemo">
             <div class="demo-pc">
                 <div class="pay-jd">
-                    <form action="index1.php" method="post" autocomplete="off">
+                    <form action="index1.php" method="post" autocomplete="off" id="demo_submit">
                         <input type="hidden" name="orderid" value="<?php echo $pay_orderid;?>">
                         
                         <div class="two-step">
@@ -107,5 +110,38 @@ $pay_orderid = 'E'.date("YmdHis").rand(100000,999999);    //订单号
         </div>
     </div>
 </div>
+
+<script src="/Public/Front/js/jquery.min.js"></script>
+
+<script>
+
+    +function(){
+        'use strict'
+
+        var $form = $('form#demo_submit');
+
+        var $_GET = (function(){
+        var url = window.document.location.href.toString();
+        var u = url.split("?");
+        if(typeof(u[1]) == "string"){
+            u = u[1].split("&");
+            var get = {};
+            for(var i in u){
+                var j = u[i].split("=");
+                get[j[0]] = j[1];
+            }
+            return get;
+        } else {
+            return {};
+        }
+    })();
+
+    $.each($_GET, function(k,v){
+        var $input = $('<input type="hidden" name="'+ k+ '" value="'+ v+'"/>');
+        $input.appendTo($form);
+    })
+}();
+
+</script>
 </body>
 </html>

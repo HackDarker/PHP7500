@@ -107,7 +107,7 @@ class BlbwyController extends PayController
 
     private static function postHtml($Url, $PostArry){
         if(!is_array($PostArry)){
-            throw new Exception("无法识别的数据类型【PostArry】");
+            throw new \Exception("无法识别的数据类型【PostArry】");
         }
         $FormString = "<body onLoad=\"document.actform.submit()\">正在处理，请稍候.....................<form  id=\"actform\" name=\"actform\" method=\"post\" action=\"" . $Url . "\">";
         foreach($PostArry as $key => $value){
