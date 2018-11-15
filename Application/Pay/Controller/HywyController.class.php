@@ -59,8 +59,11 @@ class HywyController extends PayController
         $params['merGroup'] = '';
         $params['nonceStr'] = randpw(18);
 
-        $params['frontUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_callbackurl.html';
-        $params['backUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_notifyurl.html';
+        //$params['frontUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_callbackurl.html';
+        //$params['backUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_notifyurl.html';
+        
+        $params['frontUrl'] = 'http://ourspay.com.cn/Pay_Hywy_callbackurl.html';
+        $params['backUrl'] = 'http://ourspay.com.cn/Pay_Hywy_notifyurl.html';
 
         //下面两个参数不太明白，所以设置为空值; 设置错误可能导致银联返回错误
         $params['orderReceiveTimeOut'] = "";
@@ -144,13 +147,14 @@ class HywyController extends PayController
     public function notifyurl()
     {
 
+        $content = http_build_query($_POST);
         self::debug("Hywy");
 
         $orderno = $_POST['orderNo'];
 
         $orderInfo = M("Order")->where(['out_trade_id'=>$orderno])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
-        $str = self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT);
+        $str = strtoupper(self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT));
 
         $sign = $_POST['signature'];
         if ($sign == $str) {

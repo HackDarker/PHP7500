@@ -8,7 +8,7 @@ class HydfController extends PaymentController
     
     const NOTIFY_CODE_SUC = '00';  
 
-    const ORDER_TYPE_DEF = 'DT';        //默认订单类型
+    const ORDER_TYPE_DEF = 'T1';        //默认订单类型
 
     const ACCOUNT_TYPE_DEF = '01';      //默认账户类型
 
@@ -77,7 +77,8 @@ class HydfController extends PaymentController
         $post['accountName'] = $data['bankfullname'];
         $post['accountNumber'] = $data['banknumber'];
         
-        $post['mainBankName'] = $data['bankName'];
+        //$post['mainBankName'] = $data['bankName'];
+        $post['mainBankName'] = '';
         $post['mainBankCode'] = '';
         $post['attach'] = '';
         $post['nonceStr'] = randpw(18);
@@ -95,9 +96,11 @@ class HydfController extends PaymentController
         
         //验签
         $signMsg = $resultData['signature'];
-        $sign = self::sign($resultData, $key, self::SIGN_FIELD_SORT_RET);
+        $sign = strtoupper(self::sign($resultData, $key, self::SIGN_FIELD_SORT_RET));
 
-        if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC)
+        $this->log("Hydf return. info:".http_build_query($resultData));
+
+        if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC && $resultData['statusCode'] != 'Z5')
             return ['status' => 3, 'msg' => $resultData['statusMsg'] ?: '代付创建失败'];
 
         if($sign != $signMsg)
@@ -105,7 +108,7 @@ class HydfController extends PaymentController
 
         
         if ($resultData['transStatus'] == "01")
-            return ["status" => 3, 'msg' => $resultData['responseMsg']?: '代付失败'];
+            return ["status" => 3, 'msg' => $resultData['statusMsg']?: '代付失败'];
         
         return ["status" => 1, "msg"=>'申请代付成功'];
     }
@@ -118,7 +121,7 @@ class HydfController extends PaymentController
 
         $signData = [];
         foreach ($signkeys as $v) {
-            $signData[] = $data[$v];    
+            $signData[] = $data[trim($v)];    
         }
 
         return md5(implode('|', $signData));
@@ -152,7 +155,7 @@ class HydfController extends PaymentController
 
         $post['transDate'] = $orderDate;
 
-        $post['transSeq'] = '';
+        $post['transSeq'] = '45508294';
 
         $post['productType'] = self::PRODUCT_TYPE_DEF;
         $post['paymentType'] = $this->orderTypeCode[self::ORDER_TYPE_DEF];
@@ -160,9 +163,9 @@ class HydfController extends PaymentController
         $post['nonceStr'] = randpw(18);
 
         $post['signature'] = self::sign($post, $key, self::SIGN_QUERY_FIELD_SORT);
-
-        $json = self::send_post_curl(self::$queryurl, $post);
-
+        //print_r($post);exit;
+        $json = self::send_post_curl($queryurl, $post);
+        echo $json;exit;
         $return = [];
 
         if(!$json)
@@ -176,7 +179,7 @@ class HydfController extends PaymentController
         if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC)
             return ['status' => 3, 'msg' => $resultData['statusMsg'] ?: '查询失败'];
 
-        $sign = self::sign($resultData, $key, self::SIGN_QUERY_FIELD_SORT_RET);
+        $sign = strtoupper(self::sign($resultData, $key, self::SIGN_QUERY_FIELD_SORT_RET));
 
         if ($sign != $signMsg)
             return ['status' => 3, 'msg' => '验签失败！'];
@@ -191,6 +194,7 @@ class HydfController extends PaymentController
 
 
     private static function send_post_curl($url,$data = array()){
+
         $ch = curl_init();
         //设置选项，包括URL
         curl_setopt($ch, CURLOPT_URL, $url);
@@ -199,11 +203,11 @@ class HydfController extends PaymentController
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_HEADER, 0);
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/x-www-form-urlencoded;charset=UTF-8'));
-        curl_setopt($ch,CURLOPT_TIMEOUT,5);
+        curl_setopt($ch,CURLOPT_TIMEOUT,10);
         // POST数据
         curl_setopt($ch, CURLOPT_POST, 1);
         // 把post的变量加上
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 
         //执行并获取url地址的内容
         $output = curl_exec($ch);
@@ -219,7 +223,6 @@ class HydfController extends PaymentController
         }
         return $output;
     }
-
 
 
     /**

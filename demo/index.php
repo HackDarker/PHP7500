@@ -100,6 +100,11 @@ $pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
                                     <label for="bd6"><img src="weixin.png" alt="瀚银网银"><span>瀚银网银</span></label>
                                 </li>
 
+                                <li>
+                                    <input value="918" name="channel" id="bd7" type="radio">
+                                    <label for="bd7"><img src="weixin.png" alt="瀚银快捷"><span>瀚银快捷</span></label>
+                                </li>
+
 
                             </ul>
                             <div class="btns"> <button type="submit" class="pcdemo-btn sbpay-btn" >立即支付</button></div>

@@ -10,15 +10,13 @@ class HykjController extends PayController
 
     const CONTROLLER_NAME = "Hykj";  //类名 考虑到使用R直接调用的情况，这里不能使用CONTROLLER_NAME
 
-    const PAYMENT_TYPE_DEF = 2000;    //支付类型 B2C-2000; B2B-2025
+    const PAYMENT_TYPE_DEF = 2008;    //支付类型 B2C-2000; B2B-2025
 
     const CURRENCY_CODE_DEF = 156;
 
     const PRODUCT_TYPE_DEF = 100000;
 
-    const BANK_CODE_DEF = 'unionACPB2C';   //正式环境应填写真实地址
-
-    const SIGN_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|orderTime|orderAmount|name|idNumber|accNo|telNo|productType|paymentType|nonceStr|signKey';
+    const SIGN_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|orderTime|orderAmount|name|idNumber|accNo|telNo|productType|paymentType| nonceStr|signKey';
 
     const SIGN_NOTIFY_FIELD_SORT = 'hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
@@ -35,7 +33,7 @@ class HykjController extends PayController
         $orderid = I("request.pay_orderid");
         $body    = I('request.pay_productname');
         $money = intval(I('request.pay_amount'));
-        $data    = $this->getParameter('瀚银网银支付', $array, __CLASS__, 1);
+        $data    = $this->getParameter('瀚银快捷支付', $array, __CLASS__, 1);
 
         $apikey = $data['signkey'];
 
@@ -48,10 +46,10 @@ class HykjController extends PayController
         $params['currencyCode'] = self::CURRENCY_CODE_DEF;
         $params['orderAmount'] = intval($money * 100);
 
-        $params['name'] = '全渠道';
-        $params['idNumber'] = '341126197709218366';
-        $params['accNo'] = '6216261000000000018';
-        $params['telNo'] = '13552535506';
+        $params['name'] = $_REQUEST['name']?:'';
+        $params['idNumber'] = $_REQUEST['idNumber']?:'';
+        $params['accNo'] = $_REQUEST['accNo']?:'';
+        $params['telNo'] = $_REQUEST['telNo']?:'';
         
         $params['productType'] = self::PRODUCT_TYPE_DEF;
         $params['paymentType'] = self::PAYMENT_TYPE_DEF;
@@ -59,16 +57,17 @@ class HykjController extends PayController
         $params['merGroup'] = '';
         $params['nonceStr'] = randpw(18);
 
-        $params['frontUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_callbackurl.html';
-        $params['backUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_notifyurl.html';
-
-        $params['orderReceiveTimeOut'] = 600;
-        $params['paymentTimeOut'] = 600;
-
-        $params['paymentChannel'] = self::BANK_CODE_DEF;
-
+        //$params['frontUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_callbackurl.html';
+        //$params['backUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_notifyurl.html';
+        
+        $params['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
+        $params['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
+                
         $params['signature'] = self::sign($params, $apikey, self::SIGN_FIELD_SORT);
 
+
+        // echo "<pre>";
+        // print_r($params);exit;
         $HtmlStr = self::postHtml($data['gateway'], $params);
         echo $HtmlStr;
             
@@ -118,22 +117,43 @@ class HykjController extends PayController
         echo "success";
     }
 
+
+    protected static function debug($ident = '')
+    {
+        $cachename = $ident.'_notify_test';
+        
+        $content = file_get_contents("php://input");
+        $info = [];
+        if (F($cachename))
+        {
+            $info = F($cachename);
+        }
+
+        $info[] = $content;
+
+        F($cachename, $info);
+
+    }
+
     public function notifyurl()
     {
 
+        $content = http_build_query($_POST);
+        self::debug("Hykj");
+
         $orderno = $_POST['orderNo'];
 
-        $orderInfo = M("Order")->where(['out_trade_id'=>$_POST["order_no"]])->field("key,pay_orderid")->find();
+        $orderInfo = M("Order")->where(['out_trade_id'=>$orderno])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
-        $str = self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT);
+        $str = strtoupper(self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT));
 
         $sign = $_POST['signature'];
         if ($sign == $str) {
-            $res = $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
+            $res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
             ob_clean();
 
             if (false == $res) {
-                \Think\Log::write($this->typename." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');  
+                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');  
                 echo "error";    
             } else 
                 echo "success";
@@ -141,7 +161,7 @@ class HykjController extends PayController
             exit;
         } else {
             ob_clean();
-            \Think\Log::write($this->typename." notify callback failed. info:".$content,'ALERT');
+            \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. info:".$content,'ALERT');
             echo "error";
             exit;
         }
