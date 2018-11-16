@@ -178,9 +178,11 @@
                   来源地址</a></td>
                 <td style="text-align:center;"><{$vo.pay_productname}></td>
                 <td style="text-align:center; color:#369"><{$vo['pay_status']|status=###}></td>
-                <td><a
-                        href="javascript:order_view('系统订单号:<{$vo.pay_orderid}>','<{:U('Admin/Order/show',['oid'=>$vo[id]])}>',600,400)">查看
-                </a>
+                <td>
+                  <button type="button" class="layui-btn layui-btn-mini layui-btn-normal" data-id="<{$vo[id]}>" data-handle="query">查询</button>
+
+                  <a href="javascript:order_view('系统订单号:<{$vo.pay_orderid}>','<{:U('Admin/Order/show',['oid'=>$vo[id]])}>',600,400)">查看</a>
+
                   <eq name="vo.pay_status" value="0">
                   <button class="layui-btn layui-btn-mini" onclick="setOrderPaid('设置订单为已支付','<{:U('Admin/Order/setOrderPaid',['orderid'=>$vo[id]])}>',600,350)">设置为已支付</button>
 
@@ -242,6 +244,13 @@
             ,theme: 'molv'
             , range: '|'
         });
+
+
+        $(document.body).on('click', '[data-handle]', function(event){
+            var _this = event.target;
+            console.log("_this:", _this);
+        })
+
     });
     /*订单-查看*/
     function order_view(title,url,w,h){
@@ -301,67 +310,70 @@
         });
     }
     
-    var myChart = echarts.init(document.getElementById('dmonth'));
-    myChart.setOption({
-        tooltip : {
-            trigger: 'axis',
-            axisPointer: {
-                type: 'cross',
-                label: {
-                    backgroundColor: '#6a7985'
-                }
-            }
-        },
-        legend: {
-            data:['交易金额','收入金额','支出金额']
-        },
-        toolbox: {
-            feature: {
-                saveAsImage: {}
-            }
-        },
-        grid: {
-            left: '3%',
-            right: '4%',
-            bottom: '3%',
-            containLabel: true
-        },
-        xAxis : [
-            {
-                type : 'category',
-                boundaryGap : false,
-                data : [<{$mdata.mdate|implode=","}>]
-            }
-        ],
-        yAxis : [
-            {
-                type : 'value'
-            }
-        ],
-        series : [
-            {
-                name:'交易金额',
-                type:'line',
-                stack: '总量',
-                areaStyle: {normal: {}},
-                data:[<{$mdata.amount|implode=","}>]
-            },
-            {
-                name:'收入金额',
-                type:'line',
-                stack: '总量',
-                areaStyle: {normal: {}},
-                data:[<{$mdata.rate|implode=","}>]
-            },
-            {
-                name:'支出金额',
-                type:'line',
-                stack: '总量',
-                areaStyle: {normal: {}},
-                data:[<{$mdata.total|implode=","}>]
-            },
-        ]
-    });
+    // var myChart = echarts.init(document.getElementById('dmonth'));
+    // myChart.setOption({
+    //     tooltip : {
+    //         trigger: 'axis',
+    //         axisPointer: {
+    //             type: 'cross',
+    //             label: {
+    //                 backgroundColor: '#6a7985'
+    //             }
+    //         }
+    //     },
+    //     legend: {
+    //         data:['交易金额','收入金额','支出金额']
+    //     },
+    //     toolbox: {
+    //         feature: {
+    //             saveAsImage: {}
+    //         }
+    //     },
+    //     grid: {
+    //         left: '3%',
+    //         right: '4%',
+    //         bottom: '3%',
+    //         containLabel: true
+    //     },
+    //     xAxis : [
+    //         {
+    //             type : 'category',
+    //             boundaryGap : false,
+    //             data : [<{$mdata.mdate|implode=","}>]
+    //         }
+    //     ],
+    //     yAxis : [
+    //         {
+    //             type : 'value'
+    //         }
+    //     ],
+    //     series : [
+    //         {
+    //             name:'交易金额',
+    //             type:'line',
+    //             stack: '总量',
+    //             areaStyle: {normal: {}},
+    //             data:[<{$mdata.amount|implode=","}>]
+    //         },
+    //         {
+    //             name:'收入金额',
+    //             type:'line',
+    //             stack: '总量',
+    //             areaStyle: {normal: {}},
+    //             data:[<{$mdata.rate|implode=","}>]
+    //         },
+    //         {
+    //             name:'支出金额',
+    //             type:'line',
+    //             stack: '总量',
+    //             areaStyle: {normal: {}},
+    //             data:[<{$mdata.total|implode=","}>]
+    //         },
+    //     ]
+
+
+
+    // });
 
 </script>
 </body>

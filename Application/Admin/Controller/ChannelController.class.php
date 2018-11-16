@@ -57,6 +57,7 @@ class ChannelController extends BaseController
             $_request['gateway']      = trim($papiacc['gateway']);
             $_request['pagereturn']   = $papiacc['pagereturn'];
             $_request['serverreturn'] = $papiacc['serverreturn'];
+            $_request['queryreturn'] = $papiacc['queryreturn'];
             $_request['defaultrate']  = $papiacc['defaultrate'] ? $papiacc['defaultrate'] : 0;
             $_request['fengding']     = $papiacc['fengding'] ? $papiacc['fengding'] : 0;
             $_request['rate']         = $papiacc['rate'] ? $papiacc['rate'] : 0;

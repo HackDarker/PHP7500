@@ -20,6 +20,8 @@ class HykjController extends PayController
 
     const SIGN_NOTIFY_FIELD_SORT = 'hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
+    const SIGN_QUERY_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
+
     public function __construct()
     {
         parent::__construct();
@@ -54,12 +56,8 @@ class HykjController extends PayController
         $params['productType'] = self::PRODUCT_TYPE_DEF;
         $params['paymentType'] = self::PAYMENT_TYPE_DEF;
         
-        $params['merGroup'] = '';
         $params['nonceStr'] = randpw(18);
 
-        //$params['frontUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_callbackurl.html';
-        //$params['backUrl'] = $this->_site . 'Pay_'. self::CONTROLLER_NAME. '_notifyurl.html';
-        
         $params['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
         $params['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
                 
@@ -165,6 +163,57 @@ class HykjController extends PayController
             echo "error";
             exit;
         }
+    }
+
+
+    public function query($order, $conf){
+
+        $data    = $this->getParameter('瀚银快捷支付', $array, __CLASS__, 1);
+
+        $apikey = $conf['signkey'];
+
+        $post['insCode'] = $conf['appid'];
+        $post['insMerchantCode'] = $conf['appsecret'];
+        $post['hpMerCode'] = $conf['mch_id'];
+
+        $post['orderNo'] = $order['id'];
+        $post['transDate'] = date("YmdHis", strtotime($order['searchtime']));
+        $post['transSeq'] = '';
+
+        $post['productType'] = self::PRODUCT_TYPE_DEF;
+        $post['paymentType'] = self::PAYMENT_TYPE_DEF;
+        
+        $post['nonceStr'] = randpw(18);
+
+        $post['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
+        $post['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
+                
+        $post['signature'] = self::sign($post, $apikey, self::SIGN_QUERY_FIELD_SORT);
+
+        $ret = curlPost($conf['queryreturn'], $post);
+        echo $ret;exit;
+
+        if ($sign == $str) {
+            $res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
+            ob_clean();
+
+            if (false == $res) {
+                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');  
+                echo "error";    
+            } else 
+                echo "success";
+            
+            exit;
+        } else {
+            ob_clean();
+            \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. info:".$content,'ALERT');
+            echo "error";
+            exit;
+        }
+
+        $HtmlStr = self::postHtml($data['gateway'], $params);
+        echo $HtmlStr;
+
     }
 
 }

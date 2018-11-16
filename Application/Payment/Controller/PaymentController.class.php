@@ -22,8 +22,6 @@ class PaymentController extends Controller
 				'opt' => '操作方式错误！',
 			];
 
-
-
 	public function __construct(){
 	    parent::__construct();
 	}
@@ -81,7 +79,6 @@ class PaymentController extends Controller
         }
 
         return false;
-   
 	}
 
 

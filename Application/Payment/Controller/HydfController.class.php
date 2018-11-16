@@ -23,6 +23,8 @@ class HydfController extends PaymentController
 
     const SIGN_QUERY_FIELD_SORT_RET = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
+    const SIGN_BALANCE = 'insCode|insMerchantCode|hpMerCode |accountType|nonceStr|signKey';
+
     private $controller_name = 'Hydf';
 
     private $orderTypeCode = [];
@@ -100,7 +102,7 @@ class HydfController extends PaymentController
         $signMsg = $resultData['signature'];
         $sign = strtoupper(self::sign($resultData, $key, self::SIGN_FIELD_SORT_RET));
 
-        $this->log("Hydf return. info:".http_build_query($resultData));
+        $this->log("[Hydf:". $data['orderid']. "]\n".$json);
 
         if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC && $resultData['statusCode'] != 'Z5')
             return ['status' => 3, 'msg' => $resultData['statusMsg'] ?: '代付创建失败'];
@@ -242,6 +244,35 @@ class HydfController extends PaymentController
 
     public function queryBalance()
     {
+        $id = I('post.id', '');
+        if (IS_AJAX) {
+            $conf = $this->findPaymentType($id);
 
+            $post = [
+                'insCode'    => $conf['appid'],
+                'insMerchantCode' => $conf['appsecret'],
+                'hpMerCode' => $conf['mch_id'],
+                'accountType' => self::ORDER_TYPE_DEF,
+                'nonceStr'    => randpw(18),
+            ];
+
+            $post['signature'] = self::sign($post, $conf['signkey'], self::SIGN_BALANCE);
+
+            $result = curlPost($conf['balance_gateway'], $post);
+            $result = json_decode($result, true);
+
+            $status = substr($result['statusCode'], 0, 2);         
+
+            if ('00' == $status) {
+                $data = [
+                    ['key' => '账户可用余额', 'value' => $result['balanceAmount'] / 100 . '元'],
+                    ['key' => '账户类型', 'value' => $result['accountType']],
+                ];
+                $this->assign('data',$data);
+                $html = $this->fetch('Public/queryBalance');
+                $this->ajaxReturn(['status' => 1, 'msg' => '成功', 'data' => $html]);
+            }
+            $this->ajaxReturn(['status'=>0,'msg'=>'网络延迟']);
+        }
     }
 }
