@@ -23,6 +23,8 @@ class HydfController extends PaymentController
 
     const SIGN_QUERY_FIELD_SORT_RET = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
+    private $controller_name = 'Hydf';
+
     private $orderTypeCode = [];
 
     public function __construct()
@@ -108,9 +110,9 @@ class HydfController extends PaymentController
 
         
         if ($resultData['transStatus'] == "01")
-            return ["status" => 3, 'msg' => $resultData['statusMsg']?: '代付失败'];
+            return ["status" => 3, 'msg' => $resultData['statusMsg']?: '代付申请失败'];
         
-        return ["status" => 1, "msg"=>'申请代付成功'];
+        return ["status" => 1, "msg"=>'申请代付成功', 'searchtime'=>$resultData['orderTime']];
     }
 
 
@@ -145,7 +147,7 @@ class HydfController extends PaymentController
         $merchantId = $config['mch_id'];
         $key = $config['signkey'];
 
-        $orderDate = date("YmdHis", strtotime($data['sqdatetime']));
+        $orderDate = date("YmdHis", strtotime($data['searchtime']));
 
         $post['insCode'] = $insCode;
         $post['insMerchantCode'] = $insMerchantCode;
@@ -155,7 +157,7 @@ class HydfController extends PaymentController
 
         $post['transDate'] = $orderDate;
 
-        $post['transSeq'] = '45508294';
+        $post['transSeq'] = '';
 
         $post['productType'] = self::PRODUCT_TYPE_DEF;
         $post['paymentType'] = $this->orderTypeCode[self::ORDER_TYPE_DEF];
@@ -165,7 +167,7 @@ class HydfController extends PaymentController
         $post['signature'] = self::sign($post, $key, self::SIGN_QUERY_FIELD_SORT);
         //print_r($post);exit;
         $json = self::send_post_curl($queryurl, $post);
-        echo $json;exit;
+
         $return = [];
 
         if(!$json)
@@ -176,13 +178,17 @@ class HydfController extends PaymentController
         //验签
         $signMsg = $resultData['signature'];
 
-        if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC)
+        if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC && $resultData['statusCode'] != 'Z5'){
+            $this->log( $controller_name. " query:".$json);
             return ['status' => 3, 'msg' => $resultData['statusMsg'] ?: '查询失败'];
+        }
 
         $sign = strtoupper(self::sign($resultData, $key, self::SIGN_QUERY_FIELD_SORT_RET));
 
-        if ($sign != $signMsg)
+        if ($sign != $signMsg) {
+            $this->log( $controller_name. " sign failed:".$json);
             return ['status' => 3, 'msg' => '验签失败！'];
+        }
 
         switch ($resultData['transStatus']) {
             case self::NOTIFY_CODE_SUC: return ['status' => 2, "msg" => "交易完成"];

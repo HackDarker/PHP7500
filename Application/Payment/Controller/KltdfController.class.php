@@ -147,7 +147,7 @@ class KltdfController extends PaymentController
     public function PaymentQuery($data, $config)
     {
         $apiKey = $config['signkey'];
-        $orderDate = date("Ymd", strtotime($data['sqdatetime']));
+        $orderDate = date("Ymd", strtotime($data['searchtime']));
 
         $head = [
             'version' => "",

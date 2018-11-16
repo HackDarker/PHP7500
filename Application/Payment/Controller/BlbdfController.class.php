@@ -136,7 +136,7 @@ class BlbdfController extends PaymentController
     public function PaymentQuery($data, $config)
     {
         $apiKey = $config['signkey'];
-        $date = date("Ymd", strtotime($data['sqdatetime']));
+        $date = date("Ymd", strtotime($data['searchtime']));
 
         $params = [
             "merchantId" => $config['mch_id'],        //商户号
