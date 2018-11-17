@@ -44,7 +44,10 @@ class HykjController extends PayController
         $params['hpMerCode'] = $data['mch_id'];
 
         $params['orderNo'] = $orderid;
-        $params['orderTime'] = date("YmdHis");
+
+        //这里必须使用订单的申请时间
+        //如果用当前时间可能产生时间窗口,后续的主动查询提供的订单时间可能导致查询不到订单
+        $params['orderTime'] = date("YmdHis", $data['timestamp']);
         $params['currencyCode'] = self::CURRENCY_CODE_DEF;
         $params['orderAmount'] = intval($money * 100);
 
@@ -52,15 +55,15 @@ class HykjController extends PayController
         $params['idNumber'] = $_REQUEST['idNumber']?:'';
         $params['accNo'] = $_REQUEST['accNo']?:'';
         $params['telNo'] = $_REQUEST['telNo']?:'';
-        
+
         $params['productType'] = self::PRODUCT_TYPE_DEF;
         $params['paymentType'] = self::PAYMENT_TYPE_DEF;
-        
+
         $params['nonceStr'] = randpw(18);
 
         $params['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
         $params['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
-                
+
         $params['signature'] = self::sign($params, $apikey, self::SIGN_FIELD_SORT);
 
 
@@ -68,28 +71,28 @@ class HykjController extends PayController
         // print_r($params);exit;
         $HtmlStr = self::postHtml($data['gateway'], $params);
         echo $HtmlStr;
-            
+
     }
 
     /**
      * 签名
      * @param array $data 签名数据
      * @param string $key 商户key
-     * 
+     *
      * @return string
      */
     private static function sign($data, $key, $fieldsort)
-    {   
+    {
 
         $data['signKey'] = $key;
         $signkeys = explode('|', $fieldsort);
 
         $signData = [];
         foreach ($signkeys as $v) {
-            $signData[] = $data[trim($v)];    
+            $signData[] = $data[trim($v)];
         }
 
-        return (md5(implode('|', $signData)));   
+        return (md5(implode('|', $signData)));
     }
 
 
@@ -106,7 +109,7 @@ class HykjController extends PayController
         return $FormString;
     }
 
-    
+
     /**
      * 页面通知
      */
@@ -119,7 +122,7 @@ class HykjController extends PayController
     protected static function debug($ident = '')
     {
         $cachename = $ident.'_notify_test';
-        
+
         $content = file_get_contents("php://input");
         $info = [];
         if (F($cachename))
@@ -151,11 +154,11 @@ class HykjController extends PayController
             ob_clean();
 
             if (false == $res) {
-                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');  
-                echo "error";    
-            } else 
+                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');
+                echo "error";
+            } else
                 echo "success";
-            
+
             exit;
         } else {
             ob_clean();
@@ -177,17 +180,17 @@ class HykjController extends PayController
         $post['hpMerCode'] = $conf['mch_id'];
 
         $post['orderNo'] = $order['id'];
-        $post['transDate'] = date("YmdHis", strtotime($order['searchtime']));
+        $post['transDate'] = date("YmdHis", strtotime($order['pay_applydate']));
         $post['transSeq'] = '';
 
         $post['productType'] = self::PRODUCT_TYPE_DEF;
         $post['paymentType'] = self::PAYMENT_TYPE_DEF;
-        
+
         $post['nonceStr'] = randpw(18);
 
         $post['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
         $post['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
-                
+
         $post['signature'] = self::sign($post, $apikey, self::SIGN_QUERY_FIELD_SORT);
 
         $ret = curlPost($conf['queryreturn'], $post);
@@ -198,11 +201,11 @@ class HykjController extends PayController
             ob_clean();
 
             if (false == $res) {
-                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');  
-                echo "error";    
-            } else 
+                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');
+                echo "error";
+            } else
                 echo "success";
-            
+
             exit;
         } else {
             ob_clean();

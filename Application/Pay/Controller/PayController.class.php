@@ -86,7 +86,7 @@ class PayController extends Controller
                 }
             }
         }
-       
+
         $l_ChannelAccountRiskcontrol = new \Pay\Logic\ChannelAccountRiskcontrolLogic($pay_amount);
         $channel_account_item        = [];
         $error_msg                   = '已下线';
@@ -225,6 +225,7 @@ class PayController extends Controller
             //添加订单
             if ($Order->add($data)) {
                 $return['datetime'] = date('Y-m-d H:i:s', $data['pay_applydate']);
+                $return['timestamp'] = $data['pay_applydate'];
                 $return["status"]   = "success";
                 return $return;
             } else {

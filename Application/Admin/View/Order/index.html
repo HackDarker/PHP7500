@@ -247,8 +247,10 @@
 
 
         $(document.body).on('click', '[data-handle]', function(event){
-            var _this = event.target;
-            console.log("_this:", _this);
+            var $this = $(this),
+                orderid = $this.data('id');
+
+            
         })
 
     });
