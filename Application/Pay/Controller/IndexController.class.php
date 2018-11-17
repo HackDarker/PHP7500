@@ -101,12 +101,13 @@ class IndexController extends PayController
         $count = M('Product')->where(['id' => $this->bankcode, 'status' => 1])->count();
         //通道关闭
         if (!$count) {
-            $this->showmessage('暂时无法连接支付服务器!');
+            $this->showmessage('您选择的支付支付代码未不可用!');
         }
         $this->channel = M('ProductUser')->where(['pid' => $this->bankcode, 'userid' => $this->memberid, 'status' => 1])->find();
         //用户未分配
         if (!$this->channel) {
-            $this->showmessage('暂时无法连接支付服务器!');
+            //$this->showmessage('暂时无法连接支付服务器!');
+            $this->showmessage('您不可使用该通道');
         }
     }
 
