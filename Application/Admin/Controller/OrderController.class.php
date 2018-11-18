@@ -454,13 +454,14 @@ class OrderController extends BaseController
      *
      *
      */
-    public function remote_search()
+    public function remoteQuery()
     {
-        $id = I("get.oid", 0, 'intval');
+        $id = I("get.id", 0, 'intval');
         if (!$id)
             $this->ajaxReturn([], "Order id is empty", 0);
 
         $order = M("Order")->where(['pay_order.id' => $id])->field("out_trade_id,pay_orderid,channel_id,account_id,pay_applydate as searchtime")->find();
+        $order['orderNo'] = $order['out_trade_id'];
 
         $acc = M('channel_account')->where(['id'=>$order['account_id']])->field('mch_id,signkey,appid,appsecret,unlockdomain')->find();
         $channel = M('channel')->where(['id'=>$order['channel_id']])->field('queryreturn,code')->find();
@@ -472,7 +473,7 @@ class OrderController extends BaseController
         if (!is_file(sprintf("%s/Pay/Controller/%sController.class.php", APP_PATH, $cls)))
             $this->ajaxReturn([], sprintf("支付通道(%d)不存在", $info['code']), 0);
 
-        if (R($cls. '/query', [$order,$acc]) === false)
+        if (R(sprintf("Pay/%s/query", $cls), [$order,$acc]) === false)
             $this->ajaxReturn([], "查询错误,请稍候重试!", 0);
         else
             $this->ajaxReturn([], '查询成功', 1);

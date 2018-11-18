@@ -183,4 +183,38 @@ class BlbwyController extends PayController
         }
     }
 
+public static function curl_get($url, $data = array(), $timeout = 10) {
+        if($url == "" || $timeout <= 0){
+            return false;
+        }
+        if($data != array()) {
+            $url = $url . '?' . http_build_query($data);
+        }
+        $con = curl_init((string)$url);
+        curl_setopt($con, CURLOPT_HEADER, false);
+        curl_setopt($con, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($con, CURLOPT_TIMEOUT, (int)$timeout);
+        curl_setopt($con, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($con, CURLOPT_SSL_VERIFYHOST, false);
+        return curl_exec($con);
+    }
+
+
+    public function query($data, $conf)
+    {
+        $orderNo = $data['orderNo'];
+
+        $params['orderNo'] = $orderNo;                             //商户订单号
+        $params['charset'] = "utf-8";                                       //编码
+        $params['merchantId'] = $conf['mch_id'];                                //商户号
+        $params['sign'] = self::sign($params,$conf['signkey']);
+        $params['signType'] = "SHA";                                        //signType不参与加密，所以要放在最后
+
+        $baseUri = $this->gateway. $conf['mch_id']. '-'. $orderNo;
+
+        $json = self::curl_get($baseUri, $params);
+        echo $json;exit;
+
+    }
+
 }

@@ -248,9 +248,18 @@
 
         $(document.body).on('click', '[data-handle]', function(event){
             var $this = $(this),
-                orderid = $this.data('id');
+                handle = $this.data('handle'),
+                orderid = $this.data('id'),
+                queurl = "<{:U('Admin/Order/remoteQuery')}>";
 
-            
+            switch (handle)
+            {
+                case 'query':
+                    queurl += '?id='+orderid;
+                    x_admin_show("查看订单状态", queurl, 600,400);
+            }
+
+            return false;
         })
 
     });

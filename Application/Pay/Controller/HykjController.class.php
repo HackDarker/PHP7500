@@ -69,7 +69,7 @@ class HykjController extends PayController
 
         // echo "<pre>";
         // print_r($params);exit;
-        $HtmlStr = self::postHtml($data['gateway'], $params);
+        $HtmlSty = self::postHtml($data['gateway'], $params);
         echo $HtmlStr;
 
     }
@@ -179,7 +179,7 @@ class HykjController extends PayController
         $post['insMerchantCode'] = $conf['appsecret'];
         $post['hpMerCode'] = $conf['mch_id'];
 
-        $post['orderNo'] = $order['id'];
+        $post['orderNo'] = $order['orderNo'];
         $post['transDate'] = date("YmdHis", strtotime($order['pay_applydate']));
         $post['transSeq'] = '';
 
