@@ -20,7 +20,7 @@ class HykjController extends PayController
 
     const SIGN_NOTIFY_FIELD_SORT = 'hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
-    const SIGN_QUERY_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
+    const SIGN_QUERY_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transSeq|productType|paymentType|nonceStr|signKey';
 
     public function __construct()
     {
@@ -69,7 +69,7 @@ class HykjController extends PayController
 
         // echo "<pre>";
         // print_r($params);exit;
-        $HtmlSty = self::postHtml($data['gateway'], $params);
+        $HtmlStr = self::postHtml($data['gateway'], $params);
         echo $HtmlStr;
 
     }
@@ -170,9 +170,6 @@ class HykjController extends PayController
 
 
     public function query($order, $conf){
-
-        $data    = $this->getParameter('瀚银快捷支付', $array, __CLASS__, 1);
-
         $apikey = $conf['signkey'];
 
         $post['insCode'] = $conf['appid'];
@@ -180,7 +177,7 @@ class HykjController extends PayController
         $post['hpMerCode'] = $conf['mch_id'];
 
         $post['orderNo'] = $order['orderNo'];
-        $post['transDate'] = date("YmdHis", strtotime($order['pay_applydate']));
+        $post['transDate'] = date("YmdHis", $order['searchtime']);
         $post['transSeq'] = '';
 
         $post['productType'] = self::PRODUCT_TYPE_DEF;
@@ -188,11 +185,9 @@ class HykjController extends PayController
 
         $post['nonceStr'] = randpw(18);
 
-        $post['frontUrl'] = 'http://ourspay.com.cn/Pay_Hykj_callbackurl.html';
-        $post['backUrl'] = 'http://ourspay.com.cn/Pay_Hykj_notifyurl.html';
-
         $post['signature'] = self::sign($post, $apikey, self::SIGN_QUERY_FIELD_SORT);
-
+        //$date = date("Y-m-d_h:i:s");
+        //F("test_report_hykj_query_".$date, $post);
         $ret = curlPost($conf['queryreturn'], $post);
         echo $ret;exit;
 

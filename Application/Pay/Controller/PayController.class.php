@@ -795,4 +795,14 @@ class PayController extends Controller
         }
         return $complaintsDepositRule ? $complaintsDepositRule : [];
     }
+
+
+    /**
+     * 支付完成 -通知商户页面
+     * @param stirng $orderNo 单号
+     * @param string $status 1-成功 2-失败  
+     */
+    public function toTradePage($orderNo, $status=1){
+        
+    }
 }
