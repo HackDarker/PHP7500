@@ -11,9 +11,6 @@ class KltdfController extends PaymentController
     const ACC_PER = 1;      //个人帐户类型
 
     const PURPOSE_DEF = "pay for another"; 
-
-    private static $siteurl = "";
-    private static $queryurl = "";
     
     private static $notifyUrl = "";
     private static $callbackUrl = "";
@@ -21,12 +18,6 @@ class KltdfController extends PaymentController
     public function __construct()
     {
         parent::__construct();
-
-        $conf = C("klt_conf_info");
-
-        self::$siteurl = $conf['singlePayUrl'];
-
-        self::$queryurl = $conf['singleQueryUrl'];
 
         self::$notifyUrl = $this->_site . "/Payment_Kltdf_notifyurl";
     }
@@ -87,7 +78,7 @@ class KltdfController extends PaymentController
         $data['content'] = $content;
 
         $send_contents = json_encode($data);
-        $json = self::send_post_curl(self::$siteurl, $send_contents);
+        $json = self::send_post_curl($config['exec_gateway'], $send_contents);
 
         $return = [];
 
@@ -174,7 +165,7 @@ class KltdfController extends PaymentController
         $data['content'] = $content;
 
         $send_contents = json_encode($data);
-        $json = self::send_post_curl(self::$queryurl, $send_contents);
+        $json = self::send_post_curl($config['query_gateway'], $send_contents);
 
         $return = [];
 
@@ -335,52 +326,58 @@ class KltdfController extends PaymentController
     public function queryBalance()
     {
         $id = I('post.id', '');
-        if (IS_AJAX) {
-            $config_info = $this->findPaymentType($id);
-            $params      = [
-                'version'    => '1.0.0',
-                'txnType'    => '71',
-                'txnSubType' => '00',
-                'merId'      => $config_info['mch_id'],
-            ];
-            $params['signature']  = base64_encode($this->md5Sign($params, $config_info['signkey']));
-            $params['signMethod'] = 'MD5';
-            $result               = curlPost($config_info['exec_gateway'], http_build_query($params));
-            parse_str($result, $result);
+        $conf = $this->findPaymentType($id);
 
-            if ($result) {
-                $data = [
-                    [
-                        'key'   => '账户可用余额',
-                        'value' => $result['balance'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => 'T0授信额度',
-                        'value' => $result['creditLines'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '冻结余额',
-                        'value' => $result['frozenAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '欠费金额',
-                        'value' => $result['owedAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '当日入金',
-                        'value' => $result['curInAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '当日出金',
-                        'value' => $result['curOutAmt'] / 100 . '元',
-                    ],
-                ];
-                $this->assign('data',$data);
-                $html = $this->fetch('Public/queryBalance');
-                $this->ajaxReturn(['status' => 1, 'msg' => '成功', 'data' => $html]);
-            }
-            $this->ajaxReturn(['status'=>0,'msg'=>'网络延迟']);
+        $signkey = $conf['signkey'];
+
+        $head = [
+            'version' => '',
+            'merchantId' => $conf['mch_id'], //$conf['mch_id'],
+            'transactType' => '',
+            'signType' => '1',
+        ];
+
+        $content = [];
+
+        $contents = array_merge($head,$content);
+
+        $str = self::arrayToString($contents);  
+        echo $str.'&key='. $signkey;
+        $sign = strtoupper(md5($str.'&key='. $signkey));
+
+        echo PHP_EOL;
+        echo $sign;
+        echo PHP_EOL;
+        echo PHP_EOL;
+
+        //3.拼装发送信息
+        $data = array();
+        $head['sign'] = $sign;
+        $data['head'] = $head;
+        $data['content'] = $content;
+
+        $send_contents = json_encode($data);
+        echo $send_contents;
+        echo PHP_EOL;
+        echo PHP_EOL;
+        $json = self::send_post_curl($conf['balance_gateway'], $send_contents);
+        echo $json;exit;
+
+        $result = json_decode($result, true);
+
+        $status = substr($result['statusCode'], 0, 2);         
+
+        if ('00' == $status) {
+            $data = [
+                ['key' => '账户可用余额', 'value' => $result['balanceAmount'] / 100 . '元'],
+                ['key' => '账户类型', 'value' => $result['accountType']],
+            ];
+            $this->assign('data',$data);
+            $html = $this->fetch('Public/queryBalance');
+            $this->ajaxReturn(['status' => 1, 'msg' => '成功', 'data' => $html]);
         }
+        $this->ajaxReturn(['status'=>0,'msg'=>'网络延迟']);
+    
 
     }
 }

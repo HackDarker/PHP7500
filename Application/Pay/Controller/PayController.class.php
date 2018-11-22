@@ -465,7 +465,7 @@ class PayController extends Controller
                         'pay_orderid' => $order_info["pay_orderid"],
                     ];
                     $order_result = $m_Order->where($order_where)->setField("pay_status", 2);
-                    return false === $order_result; //可能上次更新成功了，所以用恒等
+                    return false !== $order_result; //可能上次更新成功了，所以用恒等
                 } else {
                     return false;
                     // $this->jiankong($order_info['pay_orderid']);
@@ -797,12 +797,4 @@ class PayController extends Controller
     }
 
 
-    /**
-     * 支付完成 -通知商户页面
-     * @param stirng $orderNo 单号
-     * @param string $status 1-成功 2-失败  
-     */
-    public function toTradePage($orderNo, $status=1){
-        
-    }
 }

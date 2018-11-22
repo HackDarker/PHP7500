@@ -52,33 +52,26 @@ class BlbwyController extends PayController
 
         $apikey = $data['signkey'];
 
-        $params['orderNo'] = $orderid;                          //商户订单号，务必确保在系统中唯一，必填
-        $params['totalFee'] = $money;               //订单金额，单位为RMB元，必填
-        //$params['defaultbank'] = "QUICKPAY";         //网银代码，当支付方式为bankPay时，该值为空；支付方式为directPay时该值必传
-        $params['title'] = (string)$body;                              //商品的名称，请勿包含字符，选填
-        //$params['paymethod'] = 'directPay';             //支付方式，directPay：直连模式；bankPay：收银台模式，必填
-        $params['paymethod'] = 'bankPay';             //支付方式，directPay：直连模式；bankPay：收银台模式，必填
-        $params['service'] = "online_pay";                      //固定值online_pay，表示网上支付，必填
-        $params['paymentType'] = "1";                           //支付类型，固定值为1，必填
-        $params['merchantId'] = $data['mch_id'];                    //支付平台分配的商户ID，必填
-        $params['returnUrl'] = $callbackurl;         //支付成功跳转URL，仅适用于支付成功后立即返回商户界面，必填
-        $params['notifyUrl'] = $notifyurl;          //商户支付成功后，该地址将收到支付成功的异步通知信息，该地址收到的异步通知作为发货依据，必填
-        $params['charset'] = "utf-8";                           //参数编码字符集，必填
-        $params['body'] = (string)$body;                               //商品的具体描述，选填
+        $params['orderNo'] = $data['orderid'];                          
+        $params['totalFee'] = $money;               
+        //$params['defaultbank'] = "QUICKPAY";         
+        $params['title'] = (string)$body;                              
+        //$params['paymethod'] = 'directPay';             
+        $params['paymethod'] = 'bankPay';             
+        $params['service'] = "online_pay";             
+        $params['paymentType'] = "1";                  
+        $params['merchantId'] = $data['mch_id'];       
+        $params['returnUrl'] = $callbackurl;         
+        $params['notifyUrl'] = $notifyurl;  
+        $params['charset'] = "utf-8";                           
+        $params['body'] = (string)$body;                        
 
         $params['isApp'] = self::getAppType();                     //接入方式
 
-        //if ($_SERVER['REMOTE_ADDR'] == '219.140.116.41') {
-        //    echo "<pre>";
-        //    print_r($params);
-        //    exit;
-        //}
-
         $baseUri = $this->gateway.$params['merchantId'].'-'.$params['orderNo'];
         $params['sign'] = self::sign($params,$apikey);
-        $params['signType'] = "SHA";//signType不参与加密，所以要放在最后
-        //此处提供hmtl和模拟post两种方式，网银和H5需要html方式提交,采用扫码获取链接时可以用模拟Post连接获取交易地址。
-        //curl_Post   and   HtmlPost
+        $params['signType'] = "SHA";
+
         $HtmlStr = self::postHtml($baseUri, $params);
         echo $HtmlStr;
     }
@@ -122,15 +115,25 @@ class BlbwyController extends PayController
      */
     public function callbackurl()
     {
-        $Order = M("Order");
-        $typename = $this->typename;
-        //$pay_status = $Order->where("pay_orderid = '" . $_REQUEST["orderid"] . "'")->getField("pay_status");
-        if (1) {
-            echo "支付成功";die;
-            //$this->EditMoney($_REQUEST["orderid"], $typename, 1);
-        } else {
-            exit("error");
+        $content = file_get_contents("php://input");
+        parse_str($content,$data);
+        
+        foreach ($data as $key => $value){
+            $params[$key] = $value;
         }
+        unset($params['sign']);
+        unset($params['signType']);
+
+        $orderInfo = M("Order")->where(['pay_orderid'=>$_POST["order_no"]])->field("key,pay_orderid")->find();
+        $apikey = $orderInfo['key'];
+        $str = self::sign($params,$apikey);
+
+        $sign = $_POST['sign'];
+        if ($sign == $str){
+             $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 1);
+            exit;
+        } else
+            \Think\Log::write($this->typename." callback sign failed. info:".$content,'ALERT');
     }
 
     private static function debug()
@@ -166,7 +169,7 @@ class BlbwyController extends PayController
         unset($params['sign']);
         unset($params['signType']);
 
-        $orderInfo = M("Order")->where(['out_trade_id'=>$_POST["order_no"]])->field("key,pay_orderid")->find();
+        $orderInfo = M("Order")->where(['pay_orderid'=>$_POST["order_no"]])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
         $str = self::sign($params,$apikey);
 

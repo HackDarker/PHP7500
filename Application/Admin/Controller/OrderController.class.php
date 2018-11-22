@@ -460,8 +460,8 @@ class OrderController extends BaseController
         if (!$id)
             $this->ajaxReturn([], "Order id is empty", 0);
 
-        $order = M("Order")->where(['pay_order.id' => $id])->field("out_trade_id,pay_orderid,channel_id,account_id,pay_applydate as searchtime")->find();
-        $order['orderNo'] = $order['out_trade_id'];
+        $order = M("Order")->where(['id' => $id])->field("out_trade_id,pay_orderid,channel_id,account_id,pay_applydate as searchtime")->find();
+        $order['orderNo'] = $order['pay_orderid'];
 
         $acc = M('channel_account')->where(['id'=>$order['account_id']])->field('mch_id,signkey,appid,appsecret,unlockdomain')->find();
         $channel = M('channel')->where(['id'=>$order['channel_id']])->field('queryreturn,code')->find();

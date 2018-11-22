@@ -43,7 +43,7 @@ class HywyController extends PayController
         $params['insMerchantCode'] = $data['appsecret'];
         $params['hpMerCode'] = $data['mch_id'];
 
-        $params['orderNo'] = $orderid;
+        $params['orderNo'] = $data['orderid'];
         $params['orderTime'] = date("YmdHis");
         $params['currencyCode'] = self::CURRENCY_CODE_DEF;
         $params['orderAmount'] = intval($money * 100);
@@ -148,11 +148,11 @@ class HywyController extends PayController
     {
 
         $content = http_build_query($_POST);
-        self::debug("Hywy");
+        //self::debug("Hywy");
 
         $orderno = $_POST['orderNo'];
 
-        $orderInfo = M("Order")->where(['out_trade_id'=>$orderno])->field("key,pay_orderid")->find();
+        $orderInfo = M("Order")->where(['pay_orderid'=>$orderno])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
         $str = strtoupper(self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT));
 

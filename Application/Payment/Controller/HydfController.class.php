@@ -8,7 +8,7 @@ class HydfController extends PaymentController
     
     const NOTIFY_CODE_SUC = '00';  
 
-    const ORDER_TYPE_DEF = 'T1';        //默认订单类型
+    const ORDER_TYPE_DEF = 'D0';        //默认订单类型
 
     const ACCOUNT_TYPE_DEF = '01';      //默认账户类型
 

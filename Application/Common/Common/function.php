@@ -1377,4 +1377,39 @@ function log_server_notify($orderid, $url, $notifystr, $httpCode, $return) {
     }
     return false;
 }
-?>
+
+
+/**
+ * 简单记录非成功回调的异步通知信息
+ * @param string $orderid 订单ID
+ * @param string|array $content 第三方支付平台通知内容
+ * @param string $ident 支付平台标识 
+ * 
+ * @return boolean
+ */
+function log_nonsuc_notify($orderid, $content, $ident = '') {
+    $prefix = './Data/notify_nonsuc/';
+    if (mkdirs($prefix)) {
+        $dest = $prefix.date('y_m_d').'.log';
+        if (($fp = fopen($dest, 'a+')) == false) {
+            \Think\Log::write("${dest} open failed");
+            return false;
+        }
+
+        if (is_array($content))
+            $content = http_build_query($content);
+
+        if (fwrite($fp, sprintf("%s[%s]%sorderid:%s;content:%s%s", PHP_EOL, date('H:i:s'), PHP_EOL, $orderid, $content, PHP_EOL)) == false){
+            \Think\Log::write("${dest} write failed");
+            fclose($fp);
+            return false;   
+        }
+
+        fclose($fp);
+        
+        return true;
+    } else {
+        \Think\Log::write("${prefix} create failed");   
+        return false;
+    }
+}

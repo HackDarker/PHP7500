@@ -73,7 +73,7 @@ class BlbdfController extends PaymentController
         if ($result) {
 
             $result = json_decode($result, true);
-            $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMessage']));
+            $result['respMsg'] = $result['respMessage'];
 
             switch ($result['respCode']) {
                 case 'S0001':

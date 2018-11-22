@@ -96,7 +96,7 @@ class IndexController extends PaymentController{
                                 'rate_type' => $pfa_list['rate_type'],
 
                                 //这里保存的时间作为代付查询时间（guopong20181116)
-                                'searchtime' => $result['searchtime']?:time()
+                                'searchtime' => $result['searchtime']?:date('Y-m-d H:i:s')
                             ];
                             $this->handle($v['id'], $result['status'], $data);
                         } else {

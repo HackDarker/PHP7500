@@ -43,7 +43,7 @@ class HykjController extends PayController
         $params['insMerchantCode'] = $data['appsecret'];
         $params['hpMerCode'] = $data['mch_id'];
 
-        $params['orderNo'] = $orderid;
+        $params['orderNo'] = $data['orderid'];
 
         //这里必须使用订单的申请时间
         //如果用当前时间可能产生时间窗口,后续的主动查询提供的订单时间可能导致查询不到订单
@@ -115,7 +115,7 @@ class HykjController extends PayController
      */
     public function callbackurl()
     {
-        echo "success";
+
     }
 
 
@@ -139,12 +139,17 @@ class HykjController extends PayController
     public function notifyurl()
     {
 
+        if ($_POST['transStatus'] != '00') {
+            \Think\Log::write('ERR');
+            exit;    
+        }
+
+
         $content = http_build_query($_POST);
-        self::debug("Hykj");
 
         $orderno = $_POST['orderNo'];
 
-        $orderInfo = M("Order")->where(['out_trade_id'=>$orderno])->field("key,pay_orderid")->find();
+        $orderInfo = M("Order")->where(['pay_orderid'=>$orderno])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
         $str = strtoupper(self::sign($_POST, $apikey, self::SIGN_NOTIFY_FIELD_SORT));
 

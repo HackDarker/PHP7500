@@ -75,7 +75,9 @@ class PaymentController extends Controller
         if(in_array($status, [1,2,3])){
         	$data = array_merge($data, $return);
             $where = ['id'=>$id, 'status'=>['in', '0,1,4']];
-        	return M('Wttklist')->where($where)->save($data);
+        	$ret =  M('Wttklist')->where($where)->save($data);
+        	var_dump($ret);echo mysql_error();exit;
+        	return $ret;
         }
 
         return false;

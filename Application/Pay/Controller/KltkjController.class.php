@@ -26,42 +26,56 @@ namespace Pay\Controller;
 
 class KltkjController extends PayController
 {
-    private $gateway = 'https://icashier.chinasmartpay.cn/icashier/index';
-    private $queryUrl = 'https://ipay.chinasmartpay.cn/openapi/merchantPayment/orderQuery';
-    private $key = '742fa3ffd050fb441763bf8fb6c0594f';
-    private $typename = 'Kltkj';
+    const CONTROLLER_NAME = 'Kltkj';
+
+    const QUICK_PAY_TYPE = 12;
+
     /**
      *  发起支付
      */
     public function Pay($array)
     {
-        $orderid = I("request.pay_orderid");
         $body    = I('request.pay_productname');
         $money = intval(I('request.pay_amount')) * 100;
         $data    = $this->getParameter('开联通快捷支付', $array, __CLASS__, 100);
         $notifyurl = $this->_site . 'Pay_Kltkj_notifyurl.html';
         $callbackurl = $this->_site . 'Pay_Kltkj_callbackurl.html';
         $parameter = [
-            'inputCharset' => '1',//字符集
-            'pickupUrl' => $callbackurl,//前台通知地址
-            'receiveUrl' => $notifyurl,//交易结果后台通知地址
-            'version' => 'v1.0',//版本号
-            'language' => '1',//语言
-            'signType' => '0',//加密类型
-            'merchantId' => $data['mch_id'],//商户号
-            'orderNo' => $orderid,//订单号
-            'orderAmount' =>$money, //订单金额
-            'orderCurrency' => '156',//币种编号
-            'orderDatetime' => date('YmdHis',strtotime($data['datetime'])),//日期格式YmdHis
-            'orderExpireDatetime' => '25',//过期时间25
-            'productName' => (string)$body, //产品名称
-            'payType' => '12',//支付类型 0-代表全部，即显示该商户开通的所有支付方式1:网银12:快捷20:微信C扫B二维码22:支付宝C扫B二维码47:银联C扫B二维码
-            //'sign'//秘钥
+            'inputCharset' => '1',
+            'pickupUrl' => $callbackurl,
+            'receiveUrl' => $notifyurl,
+            'version' => 'v1.0',
+            'language' => '1',
+            'signType' => '0',
+            'merchantId' => $data['mch_id'],
+
+            'payerName' => $_REQUEST['payerName']?: '',
+            'payerEmail' => $_REQUEST['payerEmail']?: '',
+            'payerTelephone' => $_REQUEST['payerTelephone']?: '',
+            'payerAcctNo' => $_REQUEST['payerAcctNo']?: '',
+
+            'orderNo' => $data['orderid'],
+            'orderAmount' =>$money, 
+            'orderCurrency' => '156',
+            'orderDatetime' => date("YmdHis", $data['timestamp']), //日期格式YmdHis
+            'orderExpireDatetime' => '10',
+            'productName' => (string)$body, 
+
+            'productPrice' => $_REQUEST['productPrice']?: '',
+            'productNum' => $_REQUEST['productNum']?: '1',
+            'productId' => $_REQUEST['productId']?: '',
+            'productDesc' => $_REQUEST['productDesc']?: '',
+            'ext1' => $_REQUEST['ext1']?: '',
+            'ext2' => $_REQUEST['ext2']?: '',
+            'extTL' => $_REQUEST['extTL']?: '',
+
+            'payType' => self::QUICK_PAY_TYPE,
         ];
-        $key = $this->key;
-        $sign = $this->sign($parameter,$key);
+
+        $key = $data['signkey'];
+        $sign = $this->sign($parameter, $key);
         $parameter['sign'] = $sign;
-        echo $this->createHtml($parameter, $this->gateway);
+        echo $this->createHtml($parameter, $data['gateway']);
     }
 
 
@@ -83,8 +97,7 @@ class KltkjController extends PayController
 
     public function createHtml($params, $url)
     {
-        $encodeType = isset($params['encoding']) ? $params['encoding'] : 'UTF-8';
-        $html       = '<html><head><meta http-equiv="Content-Type" content="text/html; charset={$encodeType}"/></head><body onload="javascript:document.pay_form.submit();">
+        $html = '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/></head><body onload="javascript:document.pay_form.submit();">
             <form id="pay_form" name="pay_form" action="' . $url . '" method="post">';
         foreach ($params as $key => $value) {
             $html .= "<input type=\"hidden\" name=\"{$key}\" id=\"{$key}\" value='{$value}' />\n";
@@ -95,10 +108,10 @@ class KltkjController extends PayController
 
     /**
      * 页面通知
+     * klt并没有页面跳转的验证流程，所以这里只接返回商户页面
      */
     public function callbackurl()
     {
-        $Order = M("Order");
         $typename = $this->typename;
         //$pay_status = $Order->where("pay_orderid = '" . $_REQUEST["orderid"] . "'")->getField("pay_status");
         if (1) {
@@ -114,60 +127,121 @@ class KltkjController extends PayController
      */
     public function notifyurl()
     {
+        $orderno = $_POST['orderNo'];
 
-        $post = $_POST;
-        file_put_contents('./Data/notify2.txt', "【" . date('Y-m-d H:i:s') . "】\r\n" . json_encode($_POST) . "\r\n\r\n", FILE_APPEND);
-        //$post = json_decode('{"errorCode":"null","errorMsg":"null","ext1":"null","ext2":"null","issuerId":"04105840","language":"1","mchtOrderId":"75721342258831360","merchantId":"903110153110001","orderAmount":"100","orderDatetime":"Sun Nov 04 22:49:33 CST 2018","orderNo":"E20181104224929890816","payDatetime":"20181104225045","payResult":"1","payType":"12","sign":"9DE130A9FA4F1025FD82B5F6F664F323","signType":"0","version":"v1.0"}',true);
-        if(!$post["orderNo"]){ die; }
-        //var_dump($post);die;
-        //因为验签总是不对所以这里调用主动查询接口
-        $orderInfo = M("Order")->where("out_trade_id = '" . $post["orderNo"] . "'")->find();
-
-        // $data=[
-        //     'orderNo' => $post["orderNo"],
-        //     'orderDateTime' => date('YmdHis',$orderInfo['pay_applydate']),
-        //     'queryDateTime' => date('YmdHis'),
-        //     'version' => '18',
-        //     'merchantId' => $orderInfo['memberid'],
-        //     'signType' => '1',
-        //     //'sign'
-        // ];
-        // $key = $this->key;
-        // $selfsign = strtoupper(md5($this->sign($post,$key)));
-        // $data['sign'] = $selfsign;
-
-        // $param =  array(
-        //     'content' => array(
-        //         "orderDateTime" => $data['orderDateTime'],
-        //         "orderNo" => $data['orderNo'],
-        //         "queryDateTime" => $data['queryDateTime'],
-        //     ),
-        //     'head' => array(
-        //         "merchantId" => $data['merchantId'],
-        //         "sign" => $data['sign'],
-        //         "signType" => $data['signType'],
-        //         'version' => '18',
-        //     )
-        // );
-        // $result = curlPost($this->queryUrl,json_encode($param),"content-type:application/json;charset=UTF-8");
-        // var_dump($result);die;
-        //草他么的验签 不jb验签了
-        //echo $post['merchantId']."|".$orderInfo['memberid'];die;
-        if(isset($post['mchtOrderId']) && $post['merchantId'] === $orderInfo['memberid'] && $post['payResult'] == '1'){
-            
-            if (1) {
-                //签名验证成功
-                $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
-                echo "success";die;
-                exit;
-            } else {
-                //签名验证失败
-                exit;
-            }
-
+        if ($_POST['payResult'] != 1) {
+            log_nonsuc_notify($orderno, file_get_contents("php://input"), self::CONTROLLER_NAME);
+            exit;
         }
-        die;
+
+        $orderInfo = M("Order")->where(['pay_orderid'=>$orderno])->field("key,pay_orderid")->find();
+        $apikey = $orderInfo['key'];
+        
+        //klt这里的数据传递有bug
+        //估计是klt用的是application/json头，但php转成支持的application/x-www-form-urlencode
+        $post = $_POST;
+        foreach ($post as $k => $v) {
+            if ($v == 'null')
+                unset($post[$k]);
+        }
+
+        unset($post['sign']);
+        $str = strtoupper(self::sign($post, $apikey));
+
+        $sign = $_POST['sign'];
+        if ($sign == $str) {
+            $res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
+            ob_clean();
+            echo false == $res? 'error': 'success';
+
+            exit;
+        } else {
+            ob_clean();
+            \Think\Log::write(self::CONTROLLER_NAME." notify callback failed[sign failed]. info:". file_get_contents("php://input"), 'ALERT');
+            echo "error";
+            exit;
+        }
 
     }
+
+
+    public function query($order, $conf) 
+    {
+        $apikey = $conf['signkey'];
+        $queurl = $conf['queryreturn'];
+
+        $body['orderNo'] = $order['orderNo'];
+        $body['orderDateTime'] = date("YmdHis", $order['searchtime']);
+        $body['queryDateTime'] = date("YmdHis");
+
+        $head['version'] = '18';
+        $head['merchantId'] = $conf['mch_id'];
+        $head['signType'] = '1';
+        
+        $contents = array_merge($head,$body);
+
+        $str = self::arrayToString($contents);
+        $sign = strtoupper(md5($str.'&key='.$apikey));
+
+        //3.拼装发送信息
+        $data = array();
+        $head['sign'] = $sign;
+        $data['head'] = $head;
+        $data['content'] = $body;
+
+        $json = self::send_post_curl($queurl, $data);
+        echo $json;exit;
+
+
+    }
+
+    //签名前数组转字符串
+    private static function arrayToString($data) {
+        ksort($data);
+        $query = '';
+        foreach ($data as $key => $value) {
+            if ($key=='sign' || $key == 'signMsg' || $value === '' || $value === null ) {
+                continue;
+            }
+            $query .= $key."=".$value."&";
+        }
+        return substr($query, 0, -1);
+    }
+
+    private static function send_post_curl($url,$data = []){
+        $data = json_encode($data);
+
+        $ch = curl_init();
+        //设置选项，包括URL
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_HEADER, 0);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-type: application/json;charset=UTF-8','Content-Length: ' . strlen($data)));
+        curl_setopt($ch,CURLOPT_TIMEOUT,5);
+        // POST数据
+        curl_setopt($ch, CURLOPT_POST, 1);
+        // 把post的变量加上
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+        //执行并获取url地址的内容
+        $output = curl_exec($ch);
+        $header = curl_getinfo($ch);
+        $http_code = $header['http_code'];
+        //释放curl句柄
+        curl_close($ch);
+        if(200 != $http_code) {
+            $log['output'] = $output;
+            $log['requestData'] = $data;
+            $log['curl_header'] = $header;
+            //记日志哈
+            return null;
+        }
+        return $output;
+        //"{"responseCode":"000000","responseMsg":"短信发送成功！","requestId":"0d6f13ffcf95418fb08b47f8549d9a1d","mchtId":"903110153110001","signMsg":"01304476E4E3EB0BB68259A924445ADE","signType":"1","orderNo":"wx201808161629"}"
+    }
+
+    
 
 }
