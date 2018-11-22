@@ -47,6 +47,12 @@ class IndexController extends BaseController
     {
         echo C('vhash');
     }
+
+
+    public function doc()
+    {
+        $this->display();
+    }
 	
 	 /**
      * 生成二维码
