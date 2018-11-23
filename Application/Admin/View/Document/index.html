@@ -1,0 +1,116 @@
+<layout name="Public/layout_layui"/>
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5><a href="<{:U('Channel/product')}>">&lt;&lt;</a> 支付产品文档</h5>
+            </div>
+            <div class="ibox-content">
+                <!--管理员列表-->
+                <div class="layui-field-box">
+                    <table class="layui-table" lay-even lay-skin="nob">
+                        <thead>
+                            <tr>
+                                <th>产品</th>
+                                <th>开发进度</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <volist name="products" id="v">
+                                <tr>
+                                    <td>
+                                        {$v.name} <span class="layui-badge layui-bg-gray">{$v.prod_id}</span>
+                                    </td>
+                                    <td>
+                                        {$v.process}
+                                    </td>
+                                    <td>
+                                        <a href="javascript:" data-name="{$v.name}" data-id="{$v.id}" data-handle="edit" class="layui-btn layui-btn-mini layui-btn-radius layui-btn-primary">编辑</a>
+                                    </td>
+                                </tr>
+                            </volist>
+                        </tbody>
+                    </table>
+                </div>
+                <!--管理员列表-->
+            </div>
+        </div>
+    </div>
+</div>
+<script name="template" type="text/html">
+<div class="layui-row layui-col-md5"> 
+    <form class="layui-form" id="groupForm" method="post" autocomplete="off" action="">
+        <div class="layui-form-item">
+            <label class="layui-form-label">产品：</label>
+            <div class="layui-input-inline">
+                <textarea name="content">{{ d.name }}</textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">进度：</label>
+            <div class="layui-input-inline">
+                <select name="groupid" lay-verify="required" lay-search="">
+                    {{# layui.each(d.states, function(v, l){ }}
+                    <option {{#  if(d.process==v){ }} selected="selected" {{# } }} value="{{ v }}">{{ l }}</option>
+                    {{# }) }}
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">内容：</label>
+            <div class="layui-input-inline">
+                <textarea name="content">{{ d.data.content }}</textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="user">确认</button>
+            </div>
+        </div>
+    </form>
+</div>
+</script>
+
+
+<script>
+    layui.use(['jquery', 'layer', 'laytpl', 'form'], function($, layer, laytpl) {
+        var element = layui.element,
+            tmpl = $('script[name=template]').html(),
+            states = {0:"关闭", 1:"使用中", 2:"可调试"},
+            $dialog = $('<div>').appendTo(document.body);
+
+        layer.config({
+            style: {width:"650px", height:"450px"}
+        })
+
+        $(document.body).on('click', '[data-handle]', function(){
+            var $this = $(this),
+                id = $this.data('id'),
+                name = $this.data('name'),
+                handle = $this.data('handle');
+
+            switch (handle) {
+                case 'edit':
+                    $dialog.html("加载中…");
+                    layer.open({
+                        type:1,
+                        content: $dialog,
+                        area: ['650px', '450px'],
+                        yes: function(){
+
+                        }
+                    })
+
+                    $.get('{:U("Document/edit")}', {proid: id})
+                    .done(function(res){
+                        laytpl(tmpl).render({data:res, proid:id, name:name, states:states}, function(html){
+                            $dialog.html(html);
+                        });
+                    }) 
+                    break;
+            }
+
+        })
+    });
+</script>
