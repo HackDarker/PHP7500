@@ -7,6 +7,8 @@ class BlbdfController extends PaymentController
     private static $siteurl = "https://client.nfoooo.com/agentPay/v1/batch/";
     private static $queryurl = "https://client.nfoooo.com/agentPay/v1/batch/";
 
+    private static $balanceurl = 'https://client.nfoooo.com/search/queryBalance';
+
     public function __construct()
     {
         parent::__construct();
@@ -171,6 +173,8 @@ class BlbdfController extends PaymentController
                 $return = ['status' => 2, 'msg' => $result['respMsg']];
             } else if (strtoupper($status) == 'NULL') {
                 $return = ['status' => 1, 'msg' => $result['respMsg']];
+            } else {
+                $return = ['status' => 3, 'msg' => $contents[count($contents) - 1]];
             }
         } else {
             $return = ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
@@ -248,49 +252,28 @@ class BlbdfController extends PaymentController
     {
         $id = I('post.id', '');
         if (IS_AJAX) {
-            $config_info = $this->findPaymentType($id);
-            $params      = [
-                'version'    => '1.0.0',
-                'txnType'    => '71',
-                'txnSubType' => '00',
-                'merId'      => $config_info['mch_id'],
-            ];
-            $params['signature']  = base64_encode($this->md5Sign($params, $config_info['signkey']));
-            $params['signMethod'] = 'MD5';
-            $result               = curlPost($config_info['exec_gateway'], http_build_query($params));
-            parse_str($result, $result);
+            $conf = $this->findPaymentType($id);
 
-            if ($result) {
-                $data = [
-                    [
-                        'key'   => '账户可用余额',
-                        'value' => $result['balance'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => 'T0授信额度',
-                        'value' => $result['creditLines'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '冻结余额',
-                        'value' => $result['frozenAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '欠费金额',
-                        'value' => $result['owedAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '当日入金',
-                        'value' => $result['curInAmt'] / 100 . '元',
-                    ],
-                    [
-                        'key'   => '当日出金',
-                        'value' => $result['curOutAmt'] / 100 . '元',
-                    ],
-                ];
-                $this->assign('data',$data);
-                $html = $this->fetch('Public/queryBalance');
-                $this->ajaxReturn(['status' => 1, 'msg' => '成功', 'data' => $html]);
-            }
+            $post = [
+                'customerNo' => $conf['mch_id'], 
+            ];
+
+            $post['sign'] = self::sign($post, $conf['signkey']);
+            $post['signType'] = "SHA";
+
+            $result = self::curl_get(self::$balanceurl, $post);
+
+            $xmlObj = simplexml_load_string($result);
+
+            $data = [
+                ['key'=> '状态', 'value' => $xmlObj->status],
+                ['key'=> '余额/信息', 'value' => $xmlObj->reason/100],
+            ];
+
+            $this->assign('data',$data);
+            $html = $this->fetch('Public/queryBalance');
+            $this->ajaxReturn(['status' => 1, 'msg' => '成功', 'data' => $html]);
+            
             $this->ajaxReturn(['status'=>0,'msg'=>'网络延迟']);
         }
 

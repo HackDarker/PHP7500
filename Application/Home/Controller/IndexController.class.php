@@ -17,6 +17,8 @@ use Boris\Config;
 class IndexController extends BaseController
 {
 
+    const DOC_CACHE_NAME = "pay_product_doc";
+
 
     public function __construct()
     {
@@ -51,6 +53,8 @@ class IndexController extends BaseController
 
     public function doc()
     {
+        $data = F(self::DOC_CACHE_NAME);
+        $this->assign("list", $data);
         $this->display();
     }
 	

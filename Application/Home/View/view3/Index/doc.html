@@ -26,17 +26,51 @@
 		.layui-nav-content .nav-content-item.active {
 			display:block;
 		}
+
+		.layui-nav-content a.lay-obvious {
+			text-decoration:underline;
+			color:#FF5722;
+		}
+		.layui-nav-content a.lay-obvious:hover {
+			font-weight:bold;
+		}
+
+		.nav-content-item.markdown table {
+			width:100%;
+			background:#FFF;
+		}
+		.nav-content-item.markdown table th,
+		.nav-content-item.markdown table td {
+		    position: relative;
+		    padding: 9px 15px;
+		    min-height: 20px;
+		    line-height: 20px;
+		    font-size: 14px;
+		    border:1px solid #e2e2e2;
+		}
+		.nav-content-item.markdown table th {
+			background-color:#eee;
+		}
 	</style>
 </head>
 <body>
-
     <div class="layui-container">  
 	  	<ul class="layui-nav layui-bg-blue" lay-filter="nav">
-			<li class="layui-nav-item layui-this"><a href="javascript:">支付代码</a></li>
-			<li class="layui-nav-item"><a href="javascript:">AAAAA</a></li>
-			<li class="layui-nav-item"><a href="javascript:">BBBBBB</a></li>
-			<li class="layui-nav-item"><a href="javascript:">CCCCCC</a></li>
-			<li class="layui-nav-item"><a href="javascript:">DDDDDD</a></li>
+			<li data-index="0" class="layui-nav-item layui-this"><a href="javascript:">支付代码</a></li>
+			<for start="0" end="6">
+				<li data-index="<{$i+1}>" class="layui-nav-item"><a  href="javascript:"><?php echo $list[$i]['name']; ?></a></li>
+			</for>
+
+			<if condition="count($list) gt 6">
+				<li class="layui-nav-item">
+					<a href="javascript:">其他</a>
+					<dl class="layui-nav-child"> 
+						<?php for ($i=6; $i<count($list); ++$i): ?>
+					      <dd data-index="<{$i+1}>"><a  href=""><?php echo $list[$i]['name']; ?></a></dd>
+						<?php endfor; ?>
+				    </dl>
+				</li>
+			</if>
 		</ul>
 
 		<div class="layui-nav-content">
@@ -49,58 +83,72 @@
 				  </colgroup>
 				  <thead>
 				    <tr>
-				      <td>产品名</td>
-				      <td>代码</td>
+				      <th>产品名</th>
+				      <th>代码</th>
 				    </tr> 
 				  </thead>
 				  <tbody>
-				    <tr>
-				    	<th>百利宝支付</th>
-				      	<th>916</th>
-				    </tr>
-				    <tr>
-				      	<td>瀚银网银</td>
-				      	<td>917</td>
-				    </tr>
-				    <tr>
-				      	<td>瀚银快捷</td>
-				      	<td>918</td>
-				    </tr>
+				  	<volist name="list" id="v">
+					    <tr>
+					    	<td><a class="lay-obvious" href="javascript:" lay-filter="anchor"><{$v.name}></a></td>
+					      	<td><{$v.product_id}></td>
+					    </tr>
+				  	</volist>	
 
 				  </tbody>
 				</table>
 			</div>
-			<div class="nav-content-item">
-				22222
+
+			<volist name="list" id="v">
+			<div class="nav-content-item markdown" data-content="<{$v.content}>">
 			</div>
-			<div class="nav-content-item">
-				33333
-			</div>
-			<div class="nav-content-item">
-				44444
-			</div>
-			<div class="nav-content-item">
-				55555
-			</div>
+			</volist>
 		</div>
 		 
 	</div>
 
-
 	<script src="/Public/Front/js/plugins/layui/layui.js"></script>
+	<script src="/Public/js/markdown-browser-0.6.0/markdown.min.js"></script>
 
 	<script>
 		layui.use(['jquery', 'element'], function($){
 			'use strict'
 
   			var element = layui.element,
-  				navcont = $('.layui-nav-content');
+  				navcont = $('.layui-nav-content'),
+  				navpar = $('.layui-nav'),
+  				renderlist = {};
   			
 			element.on('nav(nav)', function(data){
-				var index = data.index();
-				navcont.children().eq(index).show().siblings().hide();
+				var index = +data.data('index'),
+					$cont = navcont.children().eq(index);
+
+					$cont.show().siblings().hide();
+
+					if (index == 0)
+						return;
+
+					else if (!renderlist[index])
+					{
+						$cont.text('文档渲染中…');
+						renderlist[index] = true;
+
+						$cont.fadeIn('slow', function(){
+							$cont.html(markdown.toHTML($cont.data('content'), 'Maruku'));
+						})
+					}
 
 			});
+
+			navcont.on('click', '[lay-filter="anchor"]', function(){
+				var $tr = $(this).closest('tr'),
+					index = $tr.index() + 1,
+					max = navpar.children().length;
+
+
+				layui.event('nav','click');
+				(index <= max) && navpar.children().eq(index).trigger('click');
+			})
 		});
 	</script>
 

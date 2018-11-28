@@ -22,6 +22,8 @@ class HywyController extends PayController
 
     const SIGN_NOTIFY_FIELD_SORT = 'hpMerCode|orderNo|transDate|transStatus|transAmount|actualAmount|transSeq|statusCode|statusMsg|signKey';
 
+    const SIGN_QUERY_FIELD_SORT = 'insCode|insMerchantCode|hpMerCode|orderNo|transDate|transSeq|productType|paymentType|nonceStr|signKey';
+
     public function __construct()
     {
         parent::__construct();
@@ -174,6 +176,51 @@ class HywyController extends PayController
             echo "error";
             exit;
         }
+    }
+
+    public function query($order, $conf){
+        $apikey = $conf['signkey'];
+
+        $post['insCode'] = $conf['appid'];
+        $post['insMerchantCode'] = $conf['appsecret'];
+        $post['hpMerCode'] = $conf['mch_id'];
+
+        $post['orderNo'] = $order['orderNo'];
+        $post['transDate'] = date("YmdHis", $order['searchtime']);
+        $post['transSeq'] = '';
+
+        $post['productType'] = self::PRODUCT_TYPE_DEF;
+        $post['paymentType'] = self::PAYMENT_TYPE_DEF;
+
+        $post['nonceStr'] = randpw(18);
+
+        $post['signature'] = self::sign($post, $apikey, self::SIGN_QUERY_FIELD_SORT);
+        //$date = date("Y-m-d_h:i:s");
+        //F("test_report_hykj_query_".$date, $post);
+        $ret = curlPost($conf['queryreturn'], $post);
+        echo $ret;exit;
+
+        if ($sign == $str) {
+            $res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
+            ob_clean();
+
+            if (false == $res) {
+                \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. (handle database or downstream notify failed) info:".$content,'ERR');
+                echo "error";
+            } else
+                echo "success";
+
+            exit;
+        } else {
+            ob_clean();
+            \Think\Log::write(self::CONTROLLER_NAME." notify callback failed. info:".$content,'ALERT');
+            echo "error";
+            exit;
+        }
+
+        $HtmlStr = self::postHtml($data['gateway'], $params);
+        echo $HtmlStr;
+
     }
 
 }

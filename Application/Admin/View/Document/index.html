@@ -1,13 +1,29 @@
 <layout name="Public/layout_layui"/>
+
+<style>
+    .dialog-inner {
+        padding:15px;
+    }
+
+    .layui-textarea {
+        min-height: 200px;
+    }
+</style>
+
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
             <div class="ibox-title">
-                <h5><a href="<{:U('Channel/product')}>">&lt;&lt;</a> 支付产品文档</h5>
+                <h5><a href="{:U('Channel/product')}">&lt;&lt;</a> 支付产品文档</h5>
             </div>
             <div class="ibox-content">
                 <!--管理员列表-->
                 <div class="layui-field-box">
+                    <div class="layui-row">
+                        <div class="layui-col-md-offset10">
+                            <a href="javascript:" data-href="{:U('Document/updateCache')}" data-handle="cache" class="layui-btn layui-btn-primary">更新缓存</a>
+                        </div>
+                    </div>
                     <table class="layui-table" lay-even lay-skin="nob">
                         <thead>
                             <tr>
@@ -26,50 +42,54 @@
                                         {$v.process}
                                     </td>
                                     <td>
-                                        <a href="javascript:" data-name="{$v.name}" data-id="{$v.id}" data-handle="edit" class="layui-btn layui-btn-mini layui-btn-radius layui-btn-primary">编辑</a>
+                                        <a href="javascript:" data-name="{$v.name}" data-id="{$v.prod_id}" data-handle="edit" class="layui-btn layui-btn-mini layui-btn-radius layui-btn-primary">编辑</a>
                                     </td>
                                 </tr>
                             </volist>
                         </tbody>
                     </table>
+
                 </div>
                 <!--管理员列表-->
             </div>
         </div>
     </div>
 </div>
+
+<!--弹出层模板-->
 <script name="template" type="text/html">
-<div class="layui-row layui-col-md5"> 
-    <form class="layui-form" id="groupForm" method="post" autocomplete="off" action="">
-        <div class="layui-form-item">
-            <label class="layui-form-label">产品：</label>
-            <div class="layui-input-inline">
-                <textarea name="content">{{ d.name }}</textarea>
+    <div class="layui-col-md12">
+        <form class="layui-form" lay-filter="dialog-form" method="post" autocomplete="off" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">产品：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input disabled" style="color:#FF5722" value="{{ d.name }}" disabled>
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">进度：</label>
-            <div class="layui-input-inline">
-                <select name="groupid" lay-verify="required" lay-search="">
-                    {{# layui.each(d.states, function(v, l){ }}
-                    <option {{#  if(d.process==v){ }} selected="selected" {{# } }} value="{{ v }}">{{ l }}</option>
-                    {{# }) }}
-                </select>
+            <div class="layui-form-item">
+                <label class="layui-form-label">进度：</label>
+                <div class="layui-input-inline">
+                    <select name="process" lay-verify="required">
+                        {{# layui.each(d.states, function(v, l){ }}
+                        <option {{#  if(d.process==v){ }} selected="selected" {{# } }} value="{{ v }}">{{ l }}</option>
+                        {{# }) }}
+                    </select>
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <label class="layui-form-label">内容：</label>
-            <div class="layui-input-inline">
-                <textarea name="content">{{ d.data.content }}</textarea>
+            <div class="layui-form-item">
+                <label class="layui-form-label">内容：</label>
+                <div class="layui-input-block">
+                    <textarea class="layui-textarea" name="content">{{ d.data.content }}</textarea>
+                </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <div class="layui-input-block">
-                <button class="layui-btn" lay-submit lay-filter="user">确认</button>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <input type="hidden" name="product_id" value="{{ d.data.product_id }}">
+                    <button class="layui-btn" lay-submit lay-filter="user">确认</button>
+                </div>
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 </script>
 
 
@@ -78,26 +98,27 @@
         var element = layui.element,
             tmpl = $('script[name=template]').html(),
             states = {0:"关闭", 1:"使用中", 2:"可调试"},
-            $dialog = $('<div>').appendTo(document.body);
-
-        layer.config({
-            style: {width:"650px", height:"450px"}
-        })
+            $dialog = $('<div class="layui-row dialog-inner">').appendTo(document.body).hide();
 
         $(document.body).on('click', '[data-handle]', function(){
             var $this = $(this),
                 id = $this.data('id'),
                 name = $this.data('name'),
-                handle = $this.data('handle');
+                handle = $this.data('handle'),
+                text;
 
             switch (handle) {
                 case 'edit':
-                    $dialog.html("加载中…");
+                    $dialog.html('<div class="">加载中…</div>');
                     layer.open({
                         type:1,
                         content: $dialog,
-                        area: ['650px', '450px'],
+                        area: ['750px', '550px'],
                         yes: function(){
+
+                        },
+                        cancel: function(index){
+                            layer.close(index);
 
                         }
                     })
@@ -106,10 +127,36 @@
                     .done(function(res){
                         laytpl(tmpl).render({data:res, proid:id, name:name, states:states}, function(html){
                             $dialog.html(html);
+                            layui.form.render('select', 'dialog-form');
                         });
                     }) 
                     break;
+
+                case 'cache':
+                    text = $this.text();
+                    $this.text("更新中…");
+                    $.get($this.data('href'))
+                        .done(function(){
+                            layer.msg("缓存更新完成!");
+                            $this.text(text);
+                        })
+
+                    return false;
+                    break;
             }
+
+        })
+
+        layui.form.on("submit(dialog-form)", function(data){
+            var url = '{:U("Document/edit")}',
+                post = $(this).serialize();
+
+            $.post(url, post)
+            .done(function(){
+                layer.msg("数据提交成功");
+                window.location.reload();
+            })
+            return false;
 
         })
     });
