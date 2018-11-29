@@ -19,7 +19,9 @@ class KltdfController extends PaymentController
     {
         parent::__construct();
 
-        self::$notifyUrl = $this->_site . "/Payment_Kltdf_notifyurl";
+        //self::$notifyUrl = $this->_site . "/Payment_Kltdf_notifyurl";
+        //使用代理访问
+        self::$notifyUrl = 'http://47.92.69.102/kltdf/notify';
     }
 
 

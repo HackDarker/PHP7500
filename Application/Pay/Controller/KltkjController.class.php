@@ -38,8 +38,12 @@ class KltkjController extends PayController
         $body    = I('request.pay_productname');
         $money = intval(I('request.pay_amount')) * 100;
         $data    = $this->getParameter('开联通快捷支付', $array, __CLASS__, 100);
-        $notifyurl = $this->_site . 'Pay_Kltkj_notifyurl.html';
+        //$notifyurl = $this->_site . 'Pay_Kltkj_notifyurl.html';
+        //!使用代理服务器执行回调
+        $notifyurl = 'http://47.92.69.102/klt/notify';
+
         $callbackurl = $this->_site . 'Pay_Kltkj_callbackurl.html';
+
         $parameter = [
             'inputCharset' => '1',
             'pickupUrl' => $callbackurl,
