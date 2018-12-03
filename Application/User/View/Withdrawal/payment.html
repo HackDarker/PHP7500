@@ -69,6 +69,7 @@
                         <th lay-data="{field:'key'}"></th>
                         <th lay-data="{field:'t', width:60}">类型</th>
                         <th lay-data="{field:'userid', width:100,style:'color:#060;'}">商户编号</th>
+                        <th lay-data="{field:'orderid', width:200}">代付单号</th>
                         <th lay-data="{field:'tkmoney', width:110}">结算金额</th>
                         <th lay-data="{field:'sxfmoney', width:100,style:'color:#060;'}">手续费</th>
                         <th lay-data="{field:'money', width:110}">到账金额</th>
@@ -89,6 +90,7 @@
                             <td><{$vo.id}></td>
                             <td>T+<{$vo.t}></td>
                             <td><{$vo["userid"]+10000}></td>
+                            <td><{$vo["orderid"]}> </td>
                             <td><{$vo["tkmoney"]}> 元</td>
                             <td><{$vo["sxfmoney"]}> 元</td>
                             <td><{$vo["money"]}> 元</td>

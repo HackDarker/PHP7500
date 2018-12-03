@@ -1281,11 +1281,71 @@ class WithdrawalController extends UserController
                 }
             }
         }
+
+
+        //是否支付代付
+        $dfinfo = M('user_auto_df')->where(['uid' => $this->fans['uid']] )->field('uid')->find();
+
+       $this->assign("autodf", !!$dfinfo);
+
         $this->assign('tkconfig', $tkconfig);
         $this->assign('bankcards', $bankcards);
         $this->assign('extend_fields', $extend_fields);
         $this->assign('info', $info);
         $this->display();
+    }
+
+    public function autodf()
+    {
+        $dfid = M('user_auto_df')->where(['uid' => $this->fans['uid']] )->getField('another_id');
+        if ($dfid) {
+            $dfinfo = M('pay_for_another')->where(['id'=>$dfid])->field('code,title')->find();
+
+            $where['userid'] = $this->fans['uid'];
+            $where['status'] = 0;
+            $count  = M('Wttklist')->where($where)->count();
+
+            $size  = 15;
+            $rows  = I('get.rows', $size, 'intval');
+            if (!$rows) {
+                $rows = $size;
+            }
+            $page            = new Page($count, $rows);
+            $list            = M('Wttklist')
+                ->where($where)
+                ->limit($page->firstRow . ',' . $page->listRows)
+                ->order('id desc')
+                ->select();    
+
+                $this->assign('dfinfo', $dfinfo);
+                $this->assign('list', $list);
+                
+        }
+        
+        $this->display();
+    }
+
+    public function submitdf() 
+    {
+        $uid = $this->fans['uid'];
+        $channe_code = M('user_auto_df')->where(['uid' => $uid])->getField('another_id');
+    
+        $id = I('request.id');
+        if (!$id) {
+            $this->ajaxReturn(['status' => 0, 'msg' => "请选择代付申请！"]);
+        }
+
+        if (!$channe_code) {
+            $this->ajaxReturen(['status'=>0, 'msg'=> '您未开通自动代付']);  
+        }
+           
+        session('admin_submit_df', 1);
+        $_REQUEST = [
+            'code' => $channe_code,
+            'id'   => $id,
+            'opt'  => 'exec',
+        ];
+        return R('Payment/Index/index2');
     }
 
     public function dfsave()
