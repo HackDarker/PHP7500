@@ -1011,6 +1011,15 @@ function isLogin(){
 }
 
 /**
+ * 获取商户登录信息
+ * @return boolean 
+ */
+function userLogin(){
+    $info = session("user_auth");
+    return $info;
+}
+
+/**
  *[返回错误信息]
  *@param string $msg [错误信息]
  *@param array  $fields [返回的错误数据]

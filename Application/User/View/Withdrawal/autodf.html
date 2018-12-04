@@ -1,53 +1,90 @@
-<include file="Public/header"/>
-<include file="Public/footer"/>
+<layout name="Public/layout_layui"/>
+
+<style>
+    .layui-table-tips-row {
+        width:250px;
+    }
+</style>
 
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
             <!--条件查询-->
             <div class="ibox-title">
-                <h5>自动代付</h5>
+                <h5><a href="<{:U('Withdrawal/dfapply')}>" class="pull-left" style="margin-right: 10px;"><i class="layui-icon"></i></a>自动代付(<span class="layui-badge-rim"><{$dfinfo.title}></span>)</h5>
                 <div class="ibox-tools">
                     <i class="layui-icon" onclick="location.replace(location.href);" title="刷新"
-                       style="cursor:pointer;">ဂ</i>
+                       style="cursor:pointer;">&#xe666;</i>
                 </div>
             </div>
-            <!--条件查询-->
+
             <div class="ibox-content">
+                <blockquote class="layui-elem-quote">代付完成(成功/失败)的订单请前住<span style="color:#1E9FFF">【代付记录】</span>查看</blockquote>
+
                 <table class="layui-table" lay-data="{width:'100%',limit:<{$rows}>,id:'userData'}">
                     <thead>
                     <tr>
                         <th lay-data="{field:'t', width:60}">类型</th>
-                        <th lay-data="{field:'orderid', width:200}">代付单号</th>
-                        <th lay-data="{field:'tkmoney', width:110}">结算金额</th>
-                        <th lay-data="{field:'sxfmoney', width:100,style:'color:#060;'}">手续费</th>
-                        <th lay-data="{field:'money', width:110}">到账金额</th>
-                        <th lay-data="{field:'bankname', width:120,style:'color:#C00;'}">银行名称</th>
-                        <th lay-data="{field:'bankzhiname', width:160}">支行名称</th>
-                        <th lay-data="{field:'banknumber', width:200}">银行卡号/开户名</th>
-                        <th lay-data="{field:'sheng', width:100}">所属省</th>
-                        <th lay-data="{field:'shi', width:120}">所属市</th>
-                        <th lay-data="{field:'sqdatetime', width:170}">申请时间</th>
-                        <th lay-data="{field:'memo', width:180}">备注</th>
-                        <th lay-data="{field:'opt', width:100}">操作</th>
+                        <th lay-data="{field:'orderid', width:180}">代付单号</th>
+                        <th lay-data="{field:'tkmoney', width:110}">结算金额(元)</th>
+                        <th lay-data="{field:'sxfmoney', width:100,style:'color:#060;'}">手续费(元)</th>
+                        <th lay-data="{field:'money', width:110}">到账金额(元)</th>
+                        <th lay-data="{field:'bankinfo', width:160}">帐户信息</th>
+                        <th lay-data="{field:'sqdatetime', width:160}">申请时间</th>
+                        <th lay-data="{field:'status', width:80}">状态</th>
+                        <th lay-data="{field:'memo', width:130}">备注</th>
+                        <th lay-data="{field:'opt', width:90}">操作</th>
                     </tr>
                     </thead>
                     <tbody>
                     <volist name="list" id="vo">
                         <tr>
                             <td>T+<{$vo.t}></td>
-                            <td><{$vo["orderid"]}> </td>
-                            <td><{$vo["tkmoney"]}> 元</td>
-                            <td><{$vo["sxfmoney"]}> 元</td>
-                            <td><{$vo["money"]}> 元</td>
-                            <td><{$vo.bankname}></td>
-                            <td><{$vo.bankzhiname}></td>
-                            <td><{$vo.banknumber}> | <{$vo.bankfullname}></td>
-                            <td><{$vo.sheng}></td>
-                            <td><{$vo.shi}></td>
-                            <td><{$vo.sqdatetime}></td>
+                            <td><{$vo["orderid"]}></td>
+                            <td><{$vo["tkmoney"]}></td>
+                            <td><{$vo["sxfmoney"]}></td>
+                            <td><{$vo["money"]}></td>
+                            <td>
+                                <div class="layui-row layui-table-tips-row">
+                                    <div class="layui-col-xs12"><a><{$vo.bankname}> <i class="layui-icon layui-word-aux">&#xe65f;</i></a></div>
+                                </div>
+                                
+                                <hr>
+                                <div class="layui-row">
+                                    <div class="layui-col-xs4 layui-word-aux">卡号</div>
+                                    <div class="layui-col-xs8"><{$vo.banknumber}></div>
+                                </div>
+                                <div class="layui-row">
+                                    <div class="layui-col-xs4 layui-word-aux">支行</div>
+                                    <div class="layui-col-xs8"><{$vo.bankzhiname}></div>
+                                </div>
+                                <div class="layui-row">
+                                    <div class="layui-col-xs4 layui-word-aux">开户名</div>
+                                    <div class="layui-col-xs8"><{$vo.bankfullname}></div>
+                                </div>
+                                <div class="layui-row">
+                                    <div class="layui-col-xs4 layui-word-aux">省/市</div>
+                                    <div class="layui-col-xs8"><{$vo.sheng}>/<{$vo.shi}></div>
+                                </div>
+                            </td>
+                            <td><?php echo date('Y/m/d H:i', strtotime($vo['sqdatetime'])) ?></td>
+                            <td>
+                                <switch name="vo.status">
+                                    <case value="0"><span style="color:#F00;">未处理</span></case>
+                                    <case value="1"><span style="color:#06F;">处理中</span></case>
+                                </switch>
+                            </td>
                             <td><{$vo.memo}></td>
-                            <td><a href="<?php echo U('Withdrawal/submitdf', ['id'=>$vo['id']]); ?>" class="layui-btn layui-btn-danger layui-btn-mini">确认代付</a></td>
+                            <td>
+                                <switch name="vo.status">
+                                    <case value="0">
+                                        <a data-id="<{$vo.id}>" data-handle="submit" href="javascript:" class="layui-btn layui-btn-normal layui-btn-mini">确认代付</a>
+                                    </case>
+                                    <case value="1">
+                                        <a data-id="<{$vo.id}>" data-handle="search" href="javascript:" class="layui-btn layui-btn-primary layui-btn-mini" >查询结果</a>
+                                    </case>
+                                </switch>
+                            </td>
                         </tr>
                     </volist>
                     </tbody>
@@ -65,14 +102,44 @@
     </div>
 </div>
 
-<script>
-    layui.use(['laydate', 'laypage', 'layer', 'table', 'form'], function() {
-        var laydate = layui.laydate //日期
-            , laypage = layui.laypage //分页
-            ,layer = layui.layer //弹层
-            ,form = layui.form //表单
-            , table = layui.table; //表格
 
+<script>
+    layui.use(['jquery', 'layer', 'table', 'form'], function($, layer) {
+        var element = layui.element;
+
+        $(document.body).on("click", '[data-handle]', function(){
+            var $this = $(this),
+                id = $this.data('id'),
+                handle = $this.data('handle'),
+                url = '',   
+                index;
+
+            switch (handle) {
+                case 'submit':
+                    url = "<{:U('Withdrawal/submitdf')}>";
+                    var index = layer.load(2, {time: 30*1000, shade:0.1});
+
+                    $.post(url, {id:id})
+                    .done(function(res){
+                        layer.close(index);
+                        layer.msg(res.msg);
+                        location.reload();
+                    })
+                    break;
+
+                case 'search':
+                    url = "<{:U('Payment/Index/batchQuery')}>";
+                    var index = layer.load(2, {time: 30*1000, shade:0.1}); 
+
+                    $.post(url, {id:id})
+                    .done(function(res){
+                        layer.close(index);
+                        layer.msg(res.msg);
+                        location.reload();
+                    })
+                    break;
+            }
+        })
     });
 
 </script>

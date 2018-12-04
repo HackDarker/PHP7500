@@ -111,6 +111,9 @@
 </div>
 <include file="Public/footer"/>
 <script>
+
+    var autodf = "<{$autodf}>";
+
     var rowCount=1;
     //添加行
     function addRow(){
@@ -161,11 +164,29 @@
                         data:$('#df_form').serialize(),
                         success:function(res){
                             if(res.status){
-                                layer.alert("申请成功", {icon: 6},function () {
-                                    location.reload();
-                                    var index = parent.layer.getFrameIndex(window.name);
-                                    parent.layer.close(index);
-                                });
+
+                                if (!autodf) {
+                                        layer.alert("申请成功", {icon: 6},function () {
+                                            location.reload();
+                                            var index = parent.layer.getFrameIndex(window.name);
+                                            parent.layer.close(index);
+                                        });
+                                        
+                                    } else {
+                                        layer.msg('正在自动代付,请勿关闭本页面…', {
+                                            icon: 16
+                                            ,shade: 0.01
+                                            ,time: 30*1000
+                                            ,shade:.1
+                                        });
+
+                                        $.post("<{:U('Withdrawal/autolatedf')}>", {num:res.data})
+                                        .done(function(){
+                                            location.href = "<{:U('Withdrawal/autodf')}>";    
+                                        })
+                                    }
+
+                                
                             }else{
                                 layer.alert(res.info ? res.info : "申请失败", {icon: 5},function () {
                                     location.reload();

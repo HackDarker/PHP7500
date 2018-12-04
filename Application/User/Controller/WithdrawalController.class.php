@@ -1295,6 +1295,41 @@ class WithdrawalController extends UserController
         $this->display();
     }
 
+    /**
+     * 代付申请后 自动代付提交 
+     * @return
+     */
+    public function autolatedf()
+    {
+        $uid = $this->fans['uid'];
+        $channe_code = M('user_auto_df')->where(['uid' => $uid])->getField('another_id');
+    
+        $ids = M("Wttklist")->limit(I('request.num'))->order('id desc')->where(['status'=>0])->field('id')->select();
+
+        if (!$ids) {
+            $this->ajaxReturn(['status' => 0, 'msg' => "无代付信息！"]);
+        }
+
+        if (!$channe_code) {
+            $this->ajaxReturen(['status'=>0, 'msg'=> '您未开通自动代付']);  
+        }
+
+        $idstr = '';
+        foreach ($ids as $v) {
+            $idstr .= $v['id']. ',';
+        }
+
+        $idstr = substr($idstr, 0, -1);
+           
+        session('admin_submit_df', 1);
+        $_REQUEST = [
+            'code' => $channe_code,
+            'id'   => $idstr,
+            'opt'  => 'exec',
+        ];
+        return R('Payment/Index/index2');
+    }
+
     public function autodf()
     {
         $dfid = M('user_auto_df')->where(['uid' => $this->fans['uid']] )->getField('another_id');
@@ -1302,7 +1337,7 @@ class WithdrawalController extends UserController
             $dfinfo = M('pay_for_another')->where(['id'=>$dfid])->field('code,title')->find();
 
             $where['userid'] = $this->fans['uid'];
-            $where['status'] = 0;
+            $where['status'] = ['in', [0,1]];
             $count  = M('Wttklist')->where($where)->count();
 
             $size  = 15;
@@ -1310,8 +1345,8 @@ class WithdrawalController extends UserController
             if (!$rows) {
                 $rows = $size;
             }
-            $page            = new Page($count, $rows);
-            $list            = M('Wttklist')
+            $page = new Page($count, $rows);
+            $list = M('Wttklist')
                 ->where($where)
                 ->limit($page->firstRow . ',' . $page->listRows)
                 ->order('id desc')
@@ -1325,6 +1360,7 @@ class WithdrawalController extends UserController
         $this->display();
     }
 
+    //自动代付 提交 
     public function submitdf() 
     {
         $uid = $this->fans['uid'];
@@ -1666,6 +1702,7 @@ class WithdrawalController extends UserController
                     $result = $Wttklist->addAll($wttkData);
                     if ($result) {
                         M()->commit();
+                        $this->ajaxReturn(['info' => "委托结算提交成功！", 'status'=> 1, 'data'=> $count]);
                         $this->success('委托结算提交成功！');
                     }
                 }

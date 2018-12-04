@@ -129,13 +129,17 @@ class IndexController extends PaymentController{
     }
 
     /**
-     *  唉 暂时用来自动代付
+     *  唉暂时用来自动代付
      *  @author guopong
      * @version 20181203
      */
     public function index2(){
-        //判断是否登录
-        
+
+        $user = userLogin();
+        if (!$user) {
+            showError("请先登录您的商户后台未登录");
+        }
+
         //验证传来的数据
         $post_data = verifyData($this->verify_data_);
         //获取要操作的订单id
@@ -176,11 +180,12 @@ class IndexController extends PaymentController{
                     if (flock($fp, LOCK_EX)) {
                         if ($opt == 'Exec') {
                             //加锁防止重复提交
+                            //同一个单号是不可能在第三方提交两次的,所以这里的加锁没必要
                             $res = M('Wttklist')->where(['id' => $v['id'], 'df_lock' => 0])->setField('df_lock', 1);
-                            // if (!$res) {
-                            //     Log::record("ID：".$v['id']."加锁失败", Log::INFO);
-                            //     continue;
-                            // }
+                            if (!$res) {
+                                Log::record("ID：".$v['id']."加锁失败", Log::INFO);
+                                continue;
+                            }
                         }
 
                         $v['money'] = round($v['money'], 2);
@@ -262,10 +267,17 @@ class IndexController extends PaymentController{
         }
     }
 
-    //批量查询代付订单状态
+    /**
+     * 批量查询代付订单状态
+     * 商户和管理员都可以访问这个地址
+     */
     public function batchQuery(){
         //判断是否登录
-        isLogin();
+        $user = userLogin();
+        if (!$user) {
+            isLogin();
+        }
+
         $id = I('post.id', '');
         //获取要查询的订单id
         $id = explode(',', rtrim($id, ',') );
