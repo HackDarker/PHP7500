@@ -1,6 +1,8 @@
 <?php
 namespace Payment\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
 class BlbdfController extends PaymentController
 {
 
@@ -67,10 +69,10 @@ class BlbdfController extends PaymentController
         //发起请求
         $params['signType'] = "SHA";
         $result = self::curl_post($baseUri,$params);
-        //echo "return";
-        //print_r($result);exit;
 
-		file_put_contents('./Data/ANSDf.txt', "【".date('Y-m-d H:i:s')."】\r\n".$result."\r\n\r\n",FILE_APPEND);
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($batchNo, $result, $ident);
 
         if ($result) {
 
@@ -154,6 +156,9 @@ class BlbdfController extends PaymentController
         $params['signType'] = "SHA";
         $result = self::curl_get($baseUri, $params);
 
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $result, $ident);
 
         $return = [];
 
@@ -163,9 +168,7 @@ class BlbdfController extends PaymentController
 
             $batchContent = $result['batchContent'];
             $contents = explode(",", $batchContent);
-            //print_r($contents);
             $status = $contents[count($contents) - 2];
-            //var_dump($status);exit;
 
             if ($result['respCode'] != "S0001") {
                 $return = ['status' => 3, 'msg' => $result['respMsg']];
@@ -183,43 +186,6 @@ class BlbdfController extends PaymentController
         return $return;
     }
 
-    //public function PaymentQuery($data, $config)
-    //{
-    //    $arraystr = [
-    //        'version'    => '1.0.0',
-    //        'txnType'    => '00',
-    //        'txnSubType' => '01',
-    //        'merId'      => $config['mch_id'],
-    //        'merOrderId' => $data['orderid'],
-    //    ];
-    //    $arraystr['signature']  = base64_encode($this->md5Sign($arraystr, $config['signkey']));
-    //    $arraystr['signMethod'] = 'MD5';
-    //    $result                 = curlPost($config['query_gateway'], http_build_query($arraystr));
-    //    if ($result) {
-    //        parse_str($result, $result);
-    //        $result['respMsg'] = base64_decode(str_replace(" ", "+", $result['respMsg']));
-    //        switch ($result['respCode']) {
-
-    //            case '1001':
-    //                $return = ['status' => 2, 'msg' => $result['respMsg']];
-    //                break;
-    //            case '1002':
-    //                $return = ['status' => 3, 'msg' => $result['respMsg']];
-    //                break;
-    //            case '1111':
-    //                $return = ['status' => 1, 'msg' => $result['respMsg']];
-    //                break;
-    //            default:
-    //                $return = ['status' => 3, 'msg' => $result['respMsg']];
-    //                break;
-    //        }
-
-    //    } else {
-    //        $return = ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
-    //    }
-
-    //    return $return;
-    //}
 
     public static function sign($params, $apiKey)
     {

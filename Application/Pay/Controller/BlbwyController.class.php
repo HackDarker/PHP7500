@@ -5,19 +5,12 @@
  */
 namespace Pay\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
 /**
- * 第三方接口开发示例控制器
+ * 百利宝网银支付
  * Class DemoController
  * @package Pay\Controller
- *
- * 三方通道接口开发说明：
- * 1. 管理员登录网站后台，供应商管理添加通道，通道英文代码即接口类名称
- * 2. 用户管理-》通道-》指定该通道（独立或轮询）
- * 3. 用户费率优先通道费率
- * 4. 用户通道指定优先系统默认支持产品通道指定
- * 5. 三方回调地址URL写法，如本接口 ：
- *    异步地址：http://www.yourdomain.com/Pay_Demo_notifyurl.html
- *    跳转地址：http://www.yourdomain.com/Pay_Demo_callbackurl.html
  *
  *    注：下游对接请查看商户API对接文档部分.
  */
@@ -129,36 +122,20 @@ class BlbwyController extends PayController
         $str = self::sign($params,$apikey);
 
         $sign = $_POST['sign'];
-        if ($sign == $str){
+        if ($sign == $str && $_POST['trade_status'] == 'TRADE_FINISHED'){
              $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 1);
             exit;
         } else
             \Think\Log::write($this->typename." callback sign failed. info:".$content,'ALERT');
     }
 
-    private static function debug()
-    {
-        var_dump(F("blb_notify_test"));exit;
-        $content = file_get_contents("php://input");
-        $info = [];
-        if (F("blb_notify_test"))
-        {
-            $info = F("blb_notify_test");
-        }
-
-        //var_dump($info);
-
-        $info[] = $content;
-
-        F("blb_notify_test", $info);
-
-    }
-
     public function notifyurl()
     {
-        //self::debug();
-
         $content = file_get_contents("php://input");
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($_POST['order_no'], $content, $ident);
 
         //参数进行转换
         parse_str($content,$data);
@@ -173,20 +150,22 @@ class BlbwyController extends PayController
         $apikey = $orderInfo['key'];
         $str = self::sign($params,$apikey);
 
+        ob_clean();
         $sign = $_POST['sign'];
-        if ($sign == $str){
+
+        if ($sign != $str) {
+            \Think\Log::write(sprintf('signature failed(ident:%s; orderNo:%s)', $ident, $_POST['order_no']), 'ALERT');
+
+        } else if ($_POST['trade_status'] == 'TRADE_FINISHED') {
             $this->EditMoney($orderInfo["pay_orderid"], $this->typename, 0);
-            ob_clean();
             echo "success";
-            exit;
-        } else {
-            ob_clean();
-            \Think\Log::write($this->typename." notify callback failed. info:".$content,'ALERT');
-            echo "error";
+            die();
         }
+
+        echo 'error';
     }
 
-public static function curl_get($url, $data = array(), $timeout = 10) {
+    public static function curl_get($url, $data = array(), $timeout = 10) {
         if($url == "" || $timeout <= 0){
             return false;
         }

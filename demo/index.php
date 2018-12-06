@@ -10,7 +10,7 @@ $pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
     <meta charset=UTF-8>
     <title>聚合收银台</title>
     <link href="cashier.css" rel="stylesheet">
-
+    <link href="/Public/Front/js/plugins/layui/css/layui.css" rel="stylesheet">
 </head>
 <body>
 <div class="tastesdk-box">
@@ -39,7 +39,7 @@ $pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
                             <p><strong>请您及时付款，以便订单尽快处理！</strong>请您在提交订单后<span>24小时</span>内完成支付，否则订单会自动取消。</p>
                             <ul class="pay-infor">
                                 <li>商品名称：测试应用-支付功能体验(非商品消费)</li>
-                                <li>支付金额：<strong><input type="" name="amount" value="1.00"> <span>元</span></strong></li>
+                                <li>支付金额：<strong><input type="" name="amount" style="width: 150px;" value="1.00"> <span>元</span></strong></li>
                                 <li>订单编号：<span><?php echo $pay_orderid;?></span></li>
                             </ul>
                             <h5>选择支付方式：</h5>
@@ -102,7 +102,7 @@ $pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
 
                                 <li>
                                     <input value="918" name="channel" id="bd7" type="radio">
-                                    <label for="bd7"><img src="weixin.png" alt="瀚银快捷"><span>瀚银快捷</span></label>
+                                    <label for="bd7" data-bankcode="918" data-bankname="瀚银快捷"><img src="weixin.png" alt="瀚银快捷"><span>瀚银快捷</span></label>
                                 </li>
 
                                 <li>
@@ -126,34 +126,112 @@ $pay_orderid =  date('ymd').substr(time(),-5).substr(microtime(),2,5);
     </div>
 </div>
 
-<script src="/Public/Front/js/jquery.min.js"></script>
+<script type="text/html" id="template">
+    <div class="layui-col-md12">
+        <form class="layui-form" style="padding:15px;" lay-filter="dialog-form" action="index1.php" method="post" autocomplete="off">
+
+            <h3 class="layui-badge layui-bg-orange">{{ d.bank.name }}</h3>
+            <hr class="layui-bg-blue">
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">卡号：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input " name="accNo">
+                </div>
+                <div class="layui-input-inline">
+                    <span class="layui-badge-dot"></span>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">手机号：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input " name="telNo">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">姓名：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input" name="name">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">证件号：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input" name="idNumber">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <input type="hidden" name="channel" value="{{ d.bank.code }}">
+                    <input type="hidden" name="orderid" value="<?php echo $pay_orderid;?>">
+                    <input type="hidden" name="amount" value="{{ d.amount }}">    
+                    <button class="layui-btn" lay-submit lay-filter="user">确认</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</script>
+
+<script src="/Public/Front/js/plugins/layui/layui.js"></script>
 
 <script>
 
     +function(){
         'use strict'
 
-        var $form = $('form#demo_submit');
+        layui.use(['jquery', 'layer', 'laytpl', 'element', 'form'], function($, layer, laytpl){
 
-        var $_GET = (function(){
-        var url = window.document.location.href.toString();
-        var u = url.split("?");
-        if(typeof(u[1]) == "string"){
-            u = u[1].split("&");
-            var get = {};
-            for(var i in u){
-                var j = u[i].split("=");
-                get[j[0]] = j[1];
+            var $form = $('form#demo_submit');
+
+            var $_GET = (function(){
+            var url = window.document.location.href.toString();
+            var u = url.split("?");
+            if(typeof(u[1]) == "string"){
+                u = u[1].split("&");
+                var get = {};
+                for(var i in u){
+                    var j = u[i].split("=");
+                    get[j[0]] = j[1];
+                }
+                return get;
+            } else {
+                return {};
             }
-            return get;
-        } else {
-            return {};
-        }
-    })();
+        })();
 
-    $.each($_GET, function(k,v){
-        var $input = $('<input type="hidden" name="'+ k+ '" value="'+ v+'"/>');
-        $input.appendTo($form);
+        $.each($_GET, function(k,v){
+            var $input = $('<input type="hidden" name="'+ k+ '" value="'+ v+'"/>');
+            $input.appendTo($form);
+        })
+
+        var tmpl = $('#template').html(),
+            $dialog = $('<div class="layui-row dialog-inner">').appendTo(document.body).hide();
+
+        $(document.body).on('click', '[data-bankcode]', function(){
+            var $this = $(this),
+                code = $this.data('bankcode'),
+                name = $this.data('bankname');
+
+            $dialog.html('<div class="">加载中…</div>');
+                    layer.open({
+                        type:1,
+                        content: $dialog,
+                        area: ['750px', '550px'],
+                        cancel: function(index){
+                            layer.close(index);
+
+                        }
+                    })
+
+            laytpl(tmpl).render({bank:{code:code, name:name}, amount:$(':input[name=amount]').val()}, function(html){
+                    $dialog.html(html);
+                    layui.form.render('select', 'dialog-form');
+                });
+
+
+
+        })
+
     })
 }();
 

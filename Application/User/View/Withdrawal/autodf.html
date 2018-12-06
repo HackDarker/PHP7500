@@ -4,13 +4,16 @@
     .layui-table-tips-row {
         width:250px;
     }
+    .ibox-title-layui {
+        min-height: 24px;
+    }
 </style>
 
 <div class="row">
     <div class="col-md-12">
         <div class="ibox float-e-margins">
             <!--条件查询-->
-            <div class="ibox-title">
+            <div class="ibox-title ibox-title-layui">
                 <h5><a href="<{:U('Withdrawal/dfapply')}>" class="pull-left" style="margin-right: 10px;"><i class="layui-icon"></i></a>自动代付(<span class="layui-badge-rim"><{$dfinfo.title}></span>)</h5>
                 <div class="ibox-tools">
                     <i class="layui-icon" onclick="location.replace(location.href);" title="刷新"
@@ -49,7 +52,7 @@
                                     <div class="layui-col-xs12"><a><{$vo.bankname}> <i class="layui-icon layui-word-aux">&#xe65f;</i></a></div>
                                 </div>
                                 
-                                <hr>
+                                <hr class="layui-bg-red">
                                 <div class="layui-row">
                                     <div class="layui-col-xs4 layui-word-aux">卡号</div>
                                     <div class="layui-col-xs8"><{$vo.banknumber}></div>
