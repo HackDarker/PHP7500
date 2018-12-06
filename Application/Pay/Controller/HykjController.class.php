@@ -5,6 +5,8 @@
  */
 namespace Pay\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
 class HykjController extends PayController
 {
 
@@ -139,6 +141,10 @@ class HykjController extends PayController
     public function notifyurl()
     {
 
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($_POST['orderNo'], NULL, $ident);
+
         if ($_POST['transStatus'] != '00') {
             \Think\Log::write('ERR');
             exit;    
@@ -175,6 +181,10 @@ class HykjController extends PayController
 
 
     public function query($order, $conf){
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($order['orderNo'], NULL, $ident);
+
         $apikey = $conf['signkey'];
 
         $post['insCode'] = $conf['appid'];

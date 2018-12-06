@@ -1,27 +1,16 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: gaoxi
- * Date: 2017-09-04
- * Time: 0:25
+ * User: guopong
+ * Date: 2018-12-06
  */
 namespace Pay\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
+
 /**
- * 第三方接口开发示例控制器
- * Class DemoController
+ * klt quick 
  * @package Pay\Controller
- *
- * 三方通道接口开发说明：
- * 1. 管理员登录网站后台，供应商管理添加通道，通道英文代码即接口类名称
- * 2. 用户管理-》通道-》指定该通道（独立或轮询）
- * 3. 用户费率优先通道费率
- * 4. 用户通道指定优先系统默认支持产品通道指定
- * 5. 三方回调地址URL写法，如本接口 ：
- *    异步地址：http://www.yourdomain.com/Pay_Demo_notifyurl.html
- *    跳转地址：http://www.yourdomain.com/Pay_Demo_callbackurl.html
- *
- *    注：下游对接请查看商户API对接文档部分.
  */
 
 class KltkjController extends PayController
@@ -131,6 +120,11 @@ class KltkjController extends PayController
      */
     public function notifyurl()
     {
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($_POST['orderNo'], NULL, $ident);
+
         $orderno = $_POST['orderNo'];
 
         if ($_POST['payResult'] != 1) {
@@ -171,6 +165,10 @@ class KltkjController extends PayController
 
     public function query($order, $conf) 
     {
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($order['orderNo'], NULL, $ident);
+
         $apikey = $conf['signkey'];
         $queurl = $conf['queryreturn'];
 
@@ -243,9 +241,7 @@ class KltkjController extends PayController
             return null;
         }
         return $output;
-        //"{"responseCode":"000000","responseMsg":"短信发送成功！","requestId":"0d6f13ffcf95418fb08b47f8549d9a1d","mchtId":"903110153110001","signMsg":"01304476E4E3EB0BB68259A924445ADE","signType":"1","orderNo":"wx201808161629"}"
     }
 
-    
 
 }

@@ -1,6 +1,8 @@
 <?php
 namespace Payment\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
 class KltdfController extends PaymentController
 {
     const PRIVATE_BANK_NO = "000000000000";  //对私电子联行号值
@@ -86,6 +88,10 @@ class KltdfController extends PaymentController
 
         if($json == null)
             return ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $json, $ident);
 
         $resultData = json_decode($json,true);
         
@@ -173,6 +179,10 @@ class KltdfController extends PaymentController
 
         if(!$json)
             return ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $json, $ident);
 
         $resultData = json_decode($json,true);
     
@@ -264,7 +274,9 @@ class KltdfController extends PaymentController
      */
     public function notifyurl()
     {
-        //self::debug("Kltdf");
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $json, $ident);
 
         $resData = $_POST;
         $orderno = $resData['merchantOrderId'];

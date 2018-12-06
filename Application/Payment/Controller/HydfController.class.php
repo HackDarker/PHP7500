@@ -1,6 +1,9 @@
 <?php
 namespace Payment\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
+
 class HydfController extends PaymentController
 {
 
@@ -96,6 +99,10 @@ class HydfController extends PaymentController
         if($json == null)
             return ['status' => 3, 'msg' => '网络延迟，请稍后再试！'];
 
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $json, $ident);
+
         $resultData = json_decode($json,true);
         
         //验签
@@ -169,6 +176,10 @@ class HydfController extends PaymentController
         $post['signature'] = self::sign($post, $key, self::SIGN_QUERY_FIELD_SORT);
         //print_r($post);exit;
         $json = self::send_post_curl($queryurl, $post);
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->dflog($data['orderid'], $json, $ident);
 
         $return = [];
 

@@ -16,7 +16,7 @@ class UpstreamNotifyLogService extends Log
 {
 
 	//上游日志的低级目录
-	const PARENT_DIR ='data/upstream_notify/';
+	const PARENT_DIR ='Data/upstream_notify/';
 
 	//支付日志目录名
 	const PAY_DIR = 'pay/';

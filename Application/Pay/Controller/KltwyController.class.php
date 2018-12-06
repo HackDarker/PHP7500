@@ -7,6 +7,9 @@
  */
 namespace Pay\Controller;
 
+use Common\Service\UpstreamNotifyLogService;
+
+
 /**
  * 第三方接口开发示例控制器
  * Class DemoController
@@ -119,8 +122,12 @@ class KltwyController extends PayController
      */
     public function notifyurl()
     {
-
         $orderno = $_POST['orderNo'];
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($orderno, NULL, $ident);
+        
 
         if ($_POST['payResult'] != 1) {
             log_nonsuc_notify($orderno, file_get_contents("php://input"), self::CONTROLLER_NAME);
@@ -161,6 +168,10 @@ class KltwyController extends PayController
 
     public function query($order, $conf) 
     {
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($order['orderNo'], NULL, $ident);
+        
         $apikey = $conf['signkey'];
         $queurl = $conf['queryreturn'];
 
