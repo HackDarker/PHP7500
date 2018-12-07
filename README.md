@@ -154,7 +154,7 @@ header('Content-type:text/html;charset=utf-8');
             "returncode" => $_REQUEST["returncode"]
         );
       
-        $md5key = "t4ig5acnpx4fet4zapshjacjd9o4bhbi";
+        $md5key = "t4ig5acnpx4fet4zaaabbccppshjacjd9o4bhbi";
 
 		ksort($returnArray);
         reset($returnArray);

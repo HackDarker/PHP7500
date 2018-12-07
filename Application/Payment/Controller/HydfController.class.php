@@ -109,7 +109,6 @@ class HydfController extends PaymentController
         $signMsg = $resultData['signature'];
         $sign = strtoupper(self::sign($resultData, $key, self::SIGN_FIELD_SORT_RET));
 
-        $this->log("[Hydf:". $data['orderid']. "]\n".$json);
 
         if ($resultData['statusCode'] != self::NOTIFY_CODE_SUC && $resultData['statusCode'] != 'Z5')
             return ['status' => 3, 'msg' => $resultData['statusMsg'] ?: '代付创建失败'];
