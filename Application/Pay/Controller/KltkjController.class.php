@@ -165,9 +165,7 @@ class KltkjController extends PayController
 
     public function query($order, $conf) 
     {
-        $log = new UpstreamNotifyLogService();
-        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
-        $log->paylog($order['orderNo'], NULL, $ident);
+        
 
         $apikey = $conf['signkey'];
         $queurl = $conf['queryreturn'];
@@ -192,6 +190,11 @@ class KltkjController extends PayController
         $data['content'] = $body;
 
         $json = self::send_post_curl($queurl, $data);
+        
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($order['orderNo'], $json, $ident);
+
         echo $json;exit;
 
 

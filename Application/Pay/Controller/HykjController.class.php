@@ -145,15 +145,16 @@ class HykjController extends PayController
         $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
         $log->paylog($_POST['orderNo'], NULL, $ident);
 
-        if ($_POST['transStatus'] != '00') {
-            \Think\Log::write('ERR');
-            exit;    
-        }
-
-
         $content = http_build_query($_POST);
 
         $orderno = $_POST['orderNo'];
+
+        //异步通知应该只有成功才会发起
+        //所以这里简单保证statusCode=='00' && transStatus=='00'
+        if ($_POST['statusCode'] !='00' || $_POST['transStatus'] != '00') {
+            \log_nonsuc_notify($orderno, file_get_contents("php://input"), self::CONTROLLER_NAME);
+            exit;    
+        }
 
         $orderInfo = M("Order")->where(['pay_orderid'=>$orderno])->field("key,pay_orderid")->find();
         $apikey = $orderInfo['key'];
@@ -181,9 +182,6 @@ class HykjController extends PayController
 
 
     public function query($order, $conf){
-        $log = new UpstreamNotifyLogService();
-        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
-        $log->paylog($order['orderNo'], NULL, $ident);
 
         $apikey = $conf['signkey'];
 
@@ -204,10 +202,16 @@ class HykjController extends PayController
         //$date = date("Y-m-d_h:i:s");
         //F("test_report_hykj_query_".$date, $post);
         $ret = curlPost($conf['queryreturn'], $post);
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($order['orderNo'], $ret, $ident); 
+
         echo $ret;exit;
 
         if ($sign == $str) {
-            $res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
+            //严格验证状态码和交易状态
+            //$res = $this->EditMoney($orderInfo["pay_orderid"], self::CONTROLLER_NAME, 0);
             ob_clean();
 
             if (false == $res) {

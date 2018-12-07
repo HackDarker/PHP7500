@@ -195,6 +195,11 @@ class BlbwyController extends PayController
         $baseUri = $this->gateway. $conf['mch_id']. '-'. $orderNo;
 
         $json = self::curl_get($baseUri, $params);
+
+        $log = new UpstreamNotifyLogService();
+        $ident = $log->autochaname(__CLASS__, __FUNCTION__, UpstreamNotifyLogService::CHA_TRIM_CONTROLLER);
+        $log->paylog($orderNo, $json, $ident);
+
         echo $json;exit;
 
     }
