@@ -1,0 +1,155 @@
+<layout name="Public/layout_layui"/>
+
+<style>
+    .dialog-inner {
+        padding:15px;
+    }
+
+    .layui-textarea {
+        min-height: 200px;
+    }
+</style>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="ibox float-e-margins">
+            <div class="ibox-title">
+                <h5>单渠道自动代付</h5>
+            </div>
+            <div class="ibox-content">
+                <!--管理员列表-->
+                <div class="layui-field-box">
+                    <div class="layui-row">
+                        <div class="layui-col-md-offset10">
+                            <a href="javascript:" data-handle="add" class="layui-btn layui-btn-primary">新增</a>
+                        </div>
+                    </div>
+                    <table class="layui-table" lay-even lay-skin="nob">
+                        <thead>
+                            <tr>
+                                <th>用户</th>
+                                <th>渠道</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <volist name="list" id="v">
+                                <tr>
+                                    <td>
+                                        <{$v.username}> <span class="layui-badge layui-bg-gray"><{$v.uid}></span>
+                                    </td>
+                                    <td>
+                                        <{$v.prodname}>
+                                    </td>
+                                    <td>
+                                        <a data-handle="delete" data-id="<{$v.uid}>" href="javascript:">删除</a>
+                                    </td>
+                                </tr>
+                            </volist>
+                        </tbody>
+                    </table>
+
+                </div>
+                <!--管理员列表-->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--弹出层模板-->
+<script name="template" type="text/html">
+    <div class="layui-col-md12">
+        <form class="layui-form" lay-filter="dialog-form" method="post" autocomplete="off" action="">
+            <div class="layui-form-item">
+                <label class="layui-form-label">用户ID：</label>
+                <div class="layui-input-inline">
+                    <input class="layui-input disabled" style="color:#FF5722" name="uid" value="">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">产品：</label>
+                <div class="layui-input-block">
+                    <select name="another_id">
+                        <option value="">-请选择-</option>
+                         {{#  layui.each(d.prodlist, function(index, item){ }}
+                        <option value="{{ item.id }}">{{ item.title }}</option>
+                         {{#  }); }} 
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button class="layui-btn" lay-submit lay-filter="user">确认</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</script>
+
+<script name="data" type="text/json">
+    <?php echo json_encode($prodlist?:[]); ?>
+</script>
+ 
+<script>
+    layui.use(['jquery', 'layer', 'laytpl', 'form'], function($, layer, laytpl) {
+        var element = layui.element,
+            tmpl = $('script[name=template]').html(),
+            options = $.parseJSON($('script[name=data]').html()),
+            $dialog = $('<div class="layui-row dialog-inner">').appendTo(document.body).hide();
+
+        $(document.body).on('click', '[data-handle]', function(){
+            var $this = $(this),
+                handle = $this.data('handle'),
+                text;
+
+            switch (handle) {
+                case 'add':
+                    $dialog.html('<div class="">加载中…</div>');
+                    layer.open({
+                        type:1,
+                        content: $dialog,
+                        area: ['750px', '550px'],
+                        yes: function(){
+
+                        },
+                        cancel: function(index){
+                            layer.close(index);
+
+                        }
+                    })
+
+                    laytpl(tmpl).render({prodlist:options}, function(html){
+                        $dialog.html(html);
+                        layui.form.render('select', 'dialog-form');
+                    });
+                    break;
+
+                case 'delete':
+
+                    layer.load();
+                    $.get('<{:U("Autodf/delete")}>', {uid:$this.data('id')})
+                        .done(function(res){
+                            layer.msg(res.info);
+                            res.status == 1 && window.location.reload();
+                        })
+
+                    return false;
+                    break;
+            }
+
+        })
+
+        layui.form.on("submit(dialog-form)", function(data){
+            var url = '<{:U("Autodf/add")}>',
+                post = $(this).serialize();
+
+            $.post(url, post)
+            .done(function(res){
+                layer.msg(res.info);
+                res.status == 1 && window.location.reload();
+            })
+            return false;
+
+        })
+    });
+</script>
