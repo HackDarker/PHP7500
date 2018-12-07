@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
     <title><{$sitename}> - 支付文档</title>
     <link href="/Public/Front/js/plugins/layui/css/layui.css" rel="stylesheet">
+    <link href="/Public/js/markdown-browser-0.6.0/markdown.css" rel="stylesheet">
 
     <!--[if lt IE 9]>
     <meta http-equiv="refresh" content="0;ie.html"/>
@@ -51,6 +52,7 @@
 		.nav-content-item.markdown table th {
 			background-color:#eee;
 		}
+
 	</style>
 </head>
 <body>
@@ -75,6 +77,10 @@
 
 		<div class="layui-nav-content">
 			<div class="nav-content-item active">
+				<p>
+					<span class="layui-badge-dot"></span>
+					<span style="color:#FF5722">用户对接一个产品时，应该仔细查看该产品有哪些特殊要求（如需要传哪些特殊字段）</span>
+				</p>
 				<table class="layui-table" lay-even lay-skin="nob">
 				  <colgroup>
 				    <col width="150">
@@ -97,6 +103,28 @@
 
 				  </tbody>
 				</table>
+
+				<blockquote class="layui-elem-quote">
+					<h2>用户接入</h2>
+					<p>
+						用户的<span class="layui-badge-rim">商户号信息</span>
+						、<span class="layui-badge-rim">接入代码demo</span>
+						位于<span class="layui-badge-rim">商户后台</span>
+						的<span class="layui-badge-rim">【API管理】</span>
+						&gt;<span class="layui-badge-rim">【API开发文档】</span>
+
+					</p>
+
+				</blockquote>
+
+				<blockquote class="layui-elem-quote layui-quote-nm">
+					<h2>字段是否必填约定</h2>
+					<ul>
+						<li> <span class="layui-badge-rim">M</span> 必须填写的域</li>
+						<li> <span class="layui-badge-rim">C</span> 某条件成立时必须填写的域</li>
+						<li> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;为空表示选填</li>
+					</ul>
+				</blockquote>
 			</div>
 
 			<volist name="list" id="v">
